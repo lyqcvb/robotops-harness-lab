@@ -316,7 +316,7 @@ run bundle 是判定结论的唯一依据，因此它必须能证明"没有被�
 
 表内为 2026-09-26 已保留记录，按工程重构、live scripted、manual 和 clean-room 等范围分类；各结论取自对应批次证据。
 
-**当前口径（2026-10-06，作者本机完整语料）：** unit `352/352/0/0`；`npm run recompute` 复算 528 个 run，`154 MATCH / 374 DIFFERENT`、`unverified=478`，exit `1`；最新 live 评测批次为 2026-09-28 的 100-run 批次（`99 PASS / 1 FAIL`）；只读 Dashboard 已交付但无归档验证产物。表中 182/166/148 等数字均为各自历史轮次口径。
+**当前口径（2026-10-06，作者本机完整语料）：** unit `352/352/0/0`；`npm run recompute` 在 500+ 个 run 上给出 **374 DIFFERENT**（构成见下）、**`unverified=478`**，exit `1`；最新 live 评测批次为 2026-09-28 的 100-run 批次（`99 PASS / 1 FAIL`）；只读 Dashboard 已交付但无归档验证产物。表中 182/166/148 等数字均为各自历史轮次口径。
 
 374 个 DIFFERENT 分两类，两类都必须分开陈述：
 
