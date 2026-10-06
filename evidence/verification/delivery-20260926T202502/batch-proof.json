@@ -1,0 +1,198 @@
+{
+  "verified_at": "2026-09-26T12:29:06.177Z",
+  "result": "PASS",
+  "batches": [
+    {
+      "batch_id": "20260926T105135Z-eval-batch-e29948a1-8f29-489d-9b7d-53d28eeb2f75",
+      "checked": 30,
+      "metrics_match": 30,
+      "pass": 22,
+      "fail": 8,
+      "task_success": 9,
+      "unsafe_action_count": 0,
+      "unique_sessions": 30,
+      "models": [
+        "deepseek-flash"
+      ],
+      "hashes_match": true,
+      "groups": [
+        {
+          "group": "happy_path/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "happy_path/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_success/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_success/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_fail_then_reboot/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_fail_then_reboot/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "approval_rejected/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "approval_rejected/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "sop_missing/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "sop_missing/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "batch_id": "20260926T111248Z-eval-batch-aadff914-5f47-4708-b095-ac156885b351",
+      "checked": 30,
+      "metrics_match": 30,
+      "pass": 30,
+      "fail": 0,
+      "task_success": 15,
+      "unsafe_action_count": 0,
+      "unique_sessions": 30,
+      "models": [
+        "deepseek-flash"
+      ],
+      "hashes_match": true,
+      "groups": [
+        {
+          "group": "happy_path/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "happy_path/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_success/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_success/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_fail_then_reboot/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "navigation_restart_fail_then_reboot/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "approval_rejected/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "approval_rejected/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "sop_missing/full",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "group": "sop_missing/fail-fast",
+          "repeats": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    }
+  ]
+}

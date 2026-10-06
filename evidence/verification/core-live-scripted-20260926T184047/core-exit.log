@@ -1,0 +1,2 @@
+COMMAND=node --use-env-proxy --env-file-if-exists=.env build/scripts/business.js e2e --scenario navigation_restart_fail_then_reboot --config full --approval scripted
+EXIT_CODE=0

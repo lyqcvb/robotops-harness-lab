@@ -1,0 +1,43 @@
+# RobotOps Harness Lab — 无 API Key 的持续集成检查
+#
+# 下面所有步骤都在 offline / scripted 路径上运行，不需要任何凭据，也不调用真实模型：
+# 没有 secrets、没有 live e2e、没有人工审批步骤。
+# 需要 DEEPSEEK_API_KEY 的 `test:e2e`、`eval`（live）、`demo` 和 `probe:live` 一律不在 CI 中运行。
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    name: typecheck / lint / unit / integration / offline eval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # 锁文件安装，跳过生命周期脚本；与文档记录的 clean-room 命令一致。
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Integration tests (offline, scripted approval)
+        run: npm run test:integration
+
+      - name: Offline evaluation
+        run: npm run eval -- --offline

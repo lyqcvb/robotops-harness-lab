@@ -1,0 +1,4 @@
+
+> robotops-harness-lab@0.0.0 lint
+> eslint src scripts tests --max-warnings=0
+

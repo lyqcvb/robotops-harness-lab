@@ -1,0 +1,506 @@
+[
+  {
+    "run_id": "20260926T105321Z-offline-12c7bcdd-0114-4cb8-9e7a-fe6da0c3bc98",
+    "file": "business-events.jsonl",
+    "sha256": "5cf5b4842c36e34658e7589e2c402690cfa7df11feea565fc25d0c2258a8c7ed",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-12c7bcdd-0114-4cb8-9e7a-fe6da0c3bc98",
+    "file": "manifest.json",
+    "sha256": "6c6bc934b9732a5f995798430323d2b7054b0fc680fcfcf57612fe57c5caaa3f",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-12c7bcdd-0114-4cb8-9e7a-fe6da0c3bc98",
+    "file": "metrics.json",
+    "sha256": "73a9596429c45ac34942b56ba4b03c379420a3be847cbb5319098a8044face8f",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-12c7bcdd-0114-4cb8-9e7a-fe6da0c3bc98",
+    "file": "native-events.jsonl",
+    "sha256": "fbbf36d84fc87c322d5d0d10c2793042dfafcfd5d389342da01f6f46609a8ba3",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-1679717f-15f0-4f4f-ba55-296351fcb230",
+    "file": "business-events.jsonl",
+    "sha256": "87644814782d16c47c043a5addb0f4f9273eb66ead1da679504d7c11ef5c87b6",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-1679717f-15f0-4f4f-ba55-296351fcb230",
+    "file": "manifest.json",
+    "sha256": "d5db54f71ea5f969712524260ebe7d8ced1794be1eff66bd8236b2c6444b8668",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-1679717f-15f0-4f4f-ba55-296351fcb230",
+    "file": "metrics.json",
+    "sha256": "37de1140513de578b0e746254f867180be1dfd8f41f8a728c5de9962e336e4e6",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-1679717f-15f0-4f4f-ba55-296351fcb230",
+    "file": "native-events.jsonl",
+    "sha256": "5eb7ac3efb573dacb4194003f10ab6814f93359cd9136e204ceae70bb1588342",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-2ff26fca-784e-4a72-bdb4-d10bb7ae057b",
+    "file": "business-events.jsonl",
+    "sha256": "aab3ee12b081f993dc03c9d92051b57ea36275d7abd60ef0dd49408e75423fd1",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-2ff26fca-784e-4a72-bdb4-d10bb7ae057b",
+    "file": "manifest.json",
+    "sha256": "5604073ee5f33c83bb7d95c0070316d72ca0e5a12aef7a59ba4be7e0db8b89d5",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-2ff26fca-784e-4a72-bdb4-d10bb7ae057b",
+    "file": "metrics.json",
+    "sha256": "f1cb0cd1d021635438f1ece00ab0f01b4f00718189d04e5aecadeb131ed0c2e3",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-2ff26fca-784e-4a72-bdb4-d10bb7ae057b",
+    "file": "native-events.jsonl",
+    "sha256": "7a170d602aeeac10c6c5912a42c5ead72223d40db6a8bb2fa7a594cb6877b3fa",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-3b0cf0d5-55fb-4261-9ae0-e987614aeeaa",
+    "file": "business-events.jsonl",
+    "sha256": "e97ee788659be122d032ae159528e12ca402046f0bea5ce4c735139c22fcf25c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-3b0cf0d5-55fb-4261-9ae0-e987614aeeaa",
+    "file": "manifest.json",
+    "sha256": "90334e9a328d9f2c6a7065afb94fcd7bc66fa0125c2dc74dcb1e7fa74ecbbe5c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-3b0cf0d5-55fb-4261-9ae0-e987614aeeaa",
+    "file": "metrics.json",
+    "sha256": "e99bde78385805871f352d4461571ea1ec308f241d2978888d1e3abd6c4bc7a0",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-3b0cf0d5-55fb-4261-9ae0-e987614aeeaa",
+    "file": "native-events.jsonl",
+    "sha256": "cc4bad4ecc95e6924a0bcf5479354923e0b228013fde83a881b594a2fe7fd46d",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-48b4736b-4990-4b1d-b763-ce50e720138b",
+    "file": "business-events.jsonl",
+    "sha256": "9a3a7c43183ab257f8a0cd57a6a17f9e7ae3c35dcde0cd198d6a041f0cca8abf",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-48b4736b-4990-4b1d-b763-ce50e720138b",
+    "file": "manifest.json",
+    "sha256": "9af078b2fc9671cf3924cc686a27a18001a0921f5bef3c31b6c3b2c0b704b6a2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-48b4736b-4990-4b1d-b763-ce50e720138b",
+    "file": "metrics.json",
+    "sha256": "fc3bcbd9b64be2278073874fe72f729859df43bb625a76e1ccbba1d97355a470",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-48b4736b-4990-4b1d-b763-ce50e720138b",
+    "file": "native-events.jsonl",
+    "sha256": "63b60c923d44953fab52ebf38bba87da97151b31d163cdfa39613d17ed50ddf5",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-61d07351-dc25-4735-8a8f-6a9a2bbcfa7d",
+    "file": "business-events.jsonl",
+    "sha256": "3e68631f00bbb84a1fe7db0591d23afb2828d41140e48ac6e323bbcc923e14a6",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-61d07351-dc25-4735-8a8f-6a9a2bbcfa7d",
+    "file": "manifest.json",
+    "sha256": "90445be08953895b6114cb2ed2bf395e86b942dc1ad077bb6f5f070abe8dad26",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-61d07351-dc25-4735-8a8f-6a9a2bbcfa7d",
+    "file": "metrics.json",
+    "sha256": "a67bad978f0d3b18b5bc38294641a217588129aed728deb4bcd41598ba205bc2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-61d07351-dc25-4735-8a8f-6a9a2bbcfa7d",
+    "file": "native-events.jsonl",
+    "sha256": "e4eeafb5d946e116d3485196f70f02c0e7a811a0f3d8b15ed2bafddb5f8eed98",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-871f1f45-75a9-411c-8732-1d64e45ca701",
+    "file": "business-events.jsonl",
+    "sha256": "b632d7b4d6eb6c0a6398e10b90bf4556b02e2d9d075212ab98e35cf8324eb2ae",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-871f1f45-75a9-411c-8732-1d64e45ca701",
+    "file": "manifest.json",
+    "sha256": "20b63b76e6461a61d65bffc7a7a7dc1cd187123f3077e3f5b1139f98a48ebd54",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-871f1f45-75a9-411c-8732-1d64e45ca701",
+    "file": "metrics.json",
+    "sha256": "cd02c31859bc22ad1874330e9c9ee83146607034d4b4117989113588cc7412a4",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-871f1f45-75a9-411c-8732-1d64e45ca701",
+    "file": "native-events.jsonl",
+    "sha256": "72d0fb10f9357791fec2a3cf56857913bdf92e052e970e669ecc41d1082111d2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-c934208d-9c77-42af-b73d-f394be59e8e0",
+    "file": "business-events.jsonl",
+    "sha256": "330e5576f44f6cae516501293e3e63d194a2e0583ff7e34ede680753afa87e89",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-c934208d-9c77-42af-b73d-f394be59e8e0",
+    "file": "manifest.json",
+    "sha256": "1a5774feb58abf97ccf9c0fa8746568f637fbe5d2dc40db17af08f1c1ff0188d",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-c934208d-9c77-42af-b73d-f394be59e8e0",
+    "file": "metrics.json",
+    "sha256": "e3da97e7e39eda3a13b4cc94dfae467733f51721dccad7146407d18e4990ff87",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-c934208d-9c77-42af-b73d-f394be59e8e0",
+    "file": "native-events.jsonl",
+    "sha256": "d0dbb2b4f938f47e0400e0bbc56647d3b0918351a86435016f25ef4d8baac201",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-d577fafb-725e-459d-9930-36295f6b85b0",
+    "file": "business-events.jsonl",
+    "sha256": "9fef7863992a07833c45fd625e23628a9e4100986e9ff142b37c20aca001bf89",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-d577fafb-725e-459d-9930-36295f6b85b0",
+    "file": "manifest.json",
+    "sha256": "60729dad48890b45ea6036f44cba24db03a77a8b7f02c2b6504393af5f6ad327",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-d577fafb-725e-459d-9930-36295f6b85b0",
+    "file": "metrics.json",
+    "sha256": "ce893e49820cb38c60549f44be5c4f30a0713aac321581c2fb070de930e41cd6",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-d577fafb-725e-459d-9930-36295f6b85b0",
+    "file": "native-events.jsonl",
+    "sha256": "d5547ee6b75e6d3973db77c068f1c8ae16c0f6ba32bb5da53b06917f13d51f68",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-eb291357-ed9d-4d72-bc93-01f9cd5cee70",
+    "file": "business-events.jsonl",
+    "sha256": "afe0c22dc0035247a8fa93ae3290efbeb7746bceb65d657072bb4668f8539c95",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-eb291357-ed9d-4d72-bc93-01f9cd5cee70",
+    "file": "manifest.json",
+    "sha256": "49312c3cfc953906386a5e2ae1cf022d22db64cfa0b0116007cddda6d9019abb",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-eb291357-ed9d-4d72-bc93-01f9cd5cee70",
+    "file": "metrics.json",
+    "sha256": "5a34c4640b35093470a7ec282b68d4029d85a84d8420d22c2bb43683ba59d2a2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T105321Z-offline-eb291357-ed9d-4d72-bc93-01f9cd5cee70",
+    "file": "native-events.jsonl",
+    "sha256": "0687f7e23b2b5bd506d97190a2947b5518b13fd092002f3e510891c01da3f450",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-3b8bc0aa-a7f6-4676-9d64-262c482b9dcc",
+    "file": "business-events.jsonl",
+    "sha256": "ee08516a417895ec54256aec0a2e406f73b22872a4efc80c8dcd37101649d7f4",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-3b8bc0aa-a7f6-4676-9d64-262c482b9dcc",
+    "file": "manifest.json",
+    "sha256": "61c324d131dbdce22d0248150e9296ab3fb062e4a39529f36bc7241533fb999d",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-3b8bc0aa-a7f6-4676-9d64-262c482b9dcc",
+    "file": "metrics.json",
+    "sha256": "76e6ae0ee44a95f25b3bdce82ca7c3cb9943ab4d0de9d4a9d9b3625097a5fc4f",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-3b8bc0aa-a7f6-4676-9d64-262c482b9dcc",
+    "file": "native-events.jsonl",
+    "sha256": "145aea08c066f1123a4d27aa24244c3f6cacc0e0a5c9014f915b6a7b3aa21ff8",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-538313e3-002c-4045-a40a-ef162fa69651",
+    "file": "business-events.jsonl",
+    "sha256": "6f87698df5c918cdfa42f6f1872e9cc0c75bcb7aed6d97baa3b01a43630f46e7",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-538313e3-002c-4045-a40a-ef162fa69651",
+    "file": "manifest.json",
+    "sha256": "256f087f773a9adaabf9a4a7efe3932066e2dbf86ff564203d8a0c049a343cab",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-538313e3-002c-4045-a40a-ef162fa69651",
+    "file": "metrics.json",
+    "sha256": "18957d3178a403251bdf865b41ee34ff3a3898f09d0f3520355d0adc0a0a041f",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-538313e3-002c-4045-a40a-ef162fa69651",
+    "file": "native-events.jsonl",
+    "sha256": "5abb14bd54ba9e97a288efdd2c6cea6f44fe57105de7bc22f0e7b6842452a34e",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a20e4524-bc73-4d1e-8da5-1f3f169afc27",
+    "file": "business-events.jsonl",
+    "sha256": "e3892f0d4c9b6eb60ebff4983a25d89055d1da1ed23be66866c97de01881cfe8",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a20e4524-bc73-4d1e-8da5-1f3f169afc27",
+    "file": "manifest.json",
+    "sha256": "937068ae9308e3edf4247fd0cec8ee11fecf3efb9f64b6c14ee71de0cdf7b968",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a20e4524-bc73-4d1e-8da5-1f3f169afc27",
+    "file": "metrics.json",
+    "sha256": "da928d7c1598692bc17257faf1a05edade7a71a1f0d5fa51c10b5dba4dc69472",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a20e4524-bc73-4d1e-8da5-1f3f169afc27",
+    "file": "native-events.jsonl",
+    "sha256": "5722eed21524c527da8187faa15a2113eefb77a6bdb8f70ff7c58c6da6ca426c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a3aad996-4ac3-4242-bffa-25e812e8f2fb",
+    "file": "business-events.jsonl",
+    "sha256": "28314b13d02fb4d62bb4088913c433904c3277346d6275339b2e6229f7df35df",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a3aad996-4ac3-4242-bffa-25e812e8f2fb",
+    "file": "manifest.json",
+    "sha256": "20fa96f7c69cc4f4b8439c2ddd7352e5ba8674b143f80c1a7682249e7eaa4970",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a3aad996-4ac3-4242-bffa-25e812e8f2fb",
+    "file": "metrics.json",
+    "sha256": "2a3b31a0f1ec93343c12d4d99cf2b9eaa8dc1fce6f30f3eb37bf3bf66c7f26fd",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-a3aad996-4ac3-4242-bffa-25e812e8f2fb",
+    "file": "native-events.jsonl",
+    "sha256": "7bff6b6d27731846f3b2859cc36bf3dfb62e53f6dc758b11fb4394b0b73ed6a0",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-bfd54357-b5b7-4f93-8708-d67d55dd782d",
+    "file": "business-events.jsonl",
+    "sha256": "e4e22e3f7e52d6d4afda5bbf4d539a98225aa375df11e0e60d4b076f31f7f62d",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-bfd54357-b5b7-4f93-8708-d67d55dd782d",
+    "file": "manifest.json",
+    "sha256": "0c8c7dad5b7b9f8556d328aa5fbf71ee40b507cc26283b1032251d6477b0268c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-bfd54357-b5b7-4f93-8708-d67d55dd782d",
+    "file": "metrics.json",
+    "sha256": "65acba188b50a83aec915b4c3af454b20e82cb7d28606f4ea3ecc2bf13d93720",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-bfd54357-b5b7-4f93-8708-d67d55dd782d",
+    "file": "native-events.jsonl",
+    "sha256": "0541c66fcd2920a68ab1dde94298677b2842e096640c7656d60c431153991b34",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-c463f197-d7de-4201-8212-c642ef36c055",
+    "file": "business-events.jsonl",
+    "sha256": "964495f3348555eef3039685b3cdf822a7e357bfc86f0c66ce59625df24d6d8e",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-c463f197-d7de-4201-8212-c642ef36c055",
+    "file": "manifest.json",
+    "sha256": "998d2592a08b9d583c3fc34f4d0c10864d4d3f8e6c2f8d810966bc5577c66ff9",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-c463f197-d7de-4201-8212-c642ef36c055",
+    "file": "metrics.json",
+    "sha256": "23c00635c699a11520f1c9a773e38dce47183ee0afb12a3abcd6239bf957f8f2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-c463f197-d7de-4201-8212-c642ef36c055",
+    "file": "native-events.jsonl",
+    "sha256": "60e75314a6a8752107420288ffd695f0aab2f86088518cfd9a14d591be821c2c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea6c2ab7-6a4e-475e-804c-a02bf0c8b5df",
+    "file": "business-events.jsonl",
+    "sha256": "98fdff794a1b6265d7960aaa936f440959edca9e8738621339b639cc8f719aaf",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea6c2ab7-6a4e-475e-804c-a02bf0c8b5df",
+    "file": "manifest.json",
+    "sha256": "a3f758e61cf19990e7861af92a77d080043ffda3f154431623d01eb0319f050f",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea6c2ab7-6a4e-475e-804c-a02bf0c8b5df",
+    "file": "metrics.json",
+    "sha256": "c7630b697a5f6e2fb0c56266d69ccee5ca04ed8e2e2805f32a5d2d47911831dd",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea6c2ab7-6a4e-475e-804c-a02bf0c8b5df",
+    "file": "native-events.jsonl",
+    "sha256": "12981cf0ac2b0bd18fcc6d6746df56b6fcf7a8799ceaf73aebc111ab169a1298",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea782763-12e4-4617-9631-b6afe2c76394",
+    "file": "business-events.jsonl",
+    "sha256": "3d16dd26bf4c9ab59dc7077391b9b184adc3c0f5a46dd55ca71141be094e4722",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea782763-12e4-4617-9631-b6afe2c76394",
+    "file": "manifest.json",
+    "sha256": "fd39fc4f8e9d91b046de7eed7178d9a1a7051335b1ee0a5f58a47523d02732e8",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea782763-12e4-4617-9631-b6afe2c76394",
+    "file": "metrics.json",
+    "sha256": "770b576c175663a4a837fb0650bd4d15d3447d35044d051c33e9c1b0df7be153",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-ea782763-12e4-4617-9631-b6afe2c76394",
+    "file": "native-events.jsonl",
+    "sha256": "3c294b25b275489f62bc1f9a4847b714c0fc9f19621d74f0583a1331fb254e39",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7748839-cfe2-4d84-9e18-c2bd4c976305",
+    "file": "business-events.jsonl",
+    "sha256": "1a390619ebd9866e7c65f618ccab579514fa05f1605a0eaa5d5089fd1a587e8a",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7748839-cfe2-4d84-9e18-c2bd4c976305",
+    "file": "manifest.json",
+    "sha256": "dfac3f33bf367c3f1f9d3938bda85f67cc9fec8060320f36b29b9bc68caeb105",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7748839-cfe2-4d84-9e18-c2bd4c976305",
+    "file": "metrics.json",
+    "sha256": "53a6a3a44f131f246e807ff3d79ac7ed75acf6ac053a94512c216d147bf794e9",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7748839-cfe2-4d84-9e18-c2bd4c976305",
+    "file": "native-events.jsonl",
+    "sha256": "01ab8a5f9f6aea511e511c252962f27c3113fd5b13e38a6c60613a66dbdd70c2",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7f59e7b-23f3-41b8-b4d3-c435e9a6dbeb",
+    "file": "business-events.jsonl",
+    "sha256": "731ff460731bfb85e1bde17cac2ea7d77099bfd652981e690e551854c1484e19",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7f59e7b-23f3-41b8-b4d3-c435e9a6dbeb",
+    "file": "manifest.json",
+    "sha256": "846489f688f0f082e544991f851e2df1d3c861bcbb71a7162c67271be731f342",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7f59e7b-23f3-41b8-b4d3-c435e9a6dbeb",
+    "file": "metrics.json",
+    "sha256": "60d13441a487d23dba32a55056112d921d965232df4a0c31e64206d531a1aedf",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111624Z-offline-f7f59e7b-23f3-41b8-b4d3-c435e9a6dbeb",
+    "file": "native-events.jsonl",
+    "sha256": "b1e023b67566e2c2bcb249a1fc6e8463676bd2889a163f77ed6bf383fbfe2a82",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111931Z-live-5a48cbfe-2dcf-4976-ad07-108d536a911e",
+    "file": "business-events.jsonl",
+    "sha256": "ea6388c20109570c96b7c91bcbdea32d045899625a601ec77493e704cd620dcd",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111931Z-live-5a48cbfe-2dcf-4976-ad07-108d536a911e",
+    "file": "manifest.json",
+    "sha256": "135a8a81d7f5d1a678e502ea1060fe1b823e77bf4f9379036c28403a823a5105",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111931Z-live-5a48cbfe-2dcf-4976-ad07-108d536a911e",
+    "file": "metrics.json",
+    "sha256": "60e79fb074d2eecbe3d6ea23bba118bfdefdcf2266439d55db357850b0f4b63c",
+    "identical": true
+  },
+  {
+    "run_id": "20260926T111931Z-live-5a48cbfe-2dcf-4976-ad07-108d536a911e",
+    "file": "native-events.jsonl",
+    "sha256": "0bc20df0cb9a1d4c778e43ede68d79aed93640d50125fd8c078467461f67fe54",
+    "identical": true
+  }
+]

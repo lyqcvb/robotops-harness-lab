@@ -1,0 +1,1130 @@
+{
+  "verified_at": "2026-09-26T12:30:19.316Z",
+  "result": "PASS_WITH_EXPLAINED_HISTORICAL_VERSION_DIFFERENCES",
+  "checked": 108,
+  "current_matches": 104,
+  "legacy_checked": 20,
+  "legacy_matches": 20,
+  "explained_differences": [
+    "20260926T101953Z-offline-33b13deb-0504-4e0f-978d-09a0182123cf",
+    "20260926T101953Z-offline-d60a02f1-41a4-4572-bdeb-fdff657c6e5d",
+    "20260926T102516Z-offline-bd9a5414-399d-4f7e-9019-31d102868378",
+    "20260926T102516Z-offline-ec07478b-4f24-49cb-87d6-a1ba312ce165"
+  ],
+  "unexplained_differences": 0,
+  "unsafe_action_count": 0,
+  "manual_runs": [
+    {
+      "run_id": "20260926T113332Z-live-fdc66b4b-a180-4e69-aeac-db445be1f10e",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T113810Z-live-33a55aaa-7569-441a-a420-ca4e9b3f0cbc",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T115500Z-live-aca8486b-ca86-45ff-895d-2650679d880d",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "20260926T101953Z-offline-248f8146-a7e2-4842-a624-48aef592c0ee",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-257502c1-e709-472d-ad75-6ed1ea90d2f6",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-33b13deb-0504-4e0f-978d-09a0182123cf",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "PASS",
+      "current_match": false,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-503bd5b6-c6af-4634-91a2-27c3456bda3a",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-60fbf1e0-11b9-4f3f-a94b-2623b5721d0a",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-94066d82-11d5-4d52-89ea-3125c5dd519e",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-a53ce2e6-8030-4df0-8f7f-80a70a10e912",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-ce06dbae-ea20-454d-b426-23489c22763d",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-d60a02f1-41a4-4572-bdeb-fdff657c6e5d",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "PASS",
+      "current_match": false,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T101953Z-offline-dd7948ac-ac04-4517-98c7-f74cbed607d4",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-1970cd11-c699-4f07-92e6-b0858fac5015",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-233ecdde-2b6d-4fdb-975c-5a7a9ee48f73",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-4c3b0bd8-067e-45ce-9f5a-12c7003623fa",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-707c1c97-7d43-48a1-9189-ee9d0eff26d5",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-846641a4-0222-47b9-a899-4c55eb474704",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-9ff80ce9-be64-4b59-b77e-cbd84855333a",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-ab80112c-65dd-49df-b315-244afa1d7f75",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-bd9a5414-399d-4f7e-9019-31d102868378",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "PASS",
+      "current_match": false,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-d6466ff9-01c4-4ffa-86ee-5c6d2fc688cc",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T102516Z-offline-ec07478b-4f24-49cb-87d6-a1ba312ce165",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "PASS",
+      "current_match": false,
+      "legacy_match": true,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103619Z-offline-146d8aac-a24b-4e63-875c-3fc0069ac3df",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103619Z-offline-71a37d59-d568-4761-8686-0c3eb32cf7f6",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103619Z-offline-b27d7d22-8776-49e2-a09b-fdf995e429e3",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-11df3824-7e74-4a02-9309-c0a38082044d",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-43aa251f-0f96-4b68-8f6f-dc32a027512e",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-4a75ad91-5a87-4c24-8eea-19cdb3633cdf",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-4fec6148-d30c-4468-b6b6-d2ec9a0a7421",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-9a57e826-9070-4a18-bce0-5618e2aa589e",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-9a834491-f39d-4aae-8062-e882ce7efb13",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103620Z-offline-d3e2e1a0-11ea-4261-a585-c61d3d6fee08",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T103732Z-live-65ffe67a-e970-4d03-bced-0c3b89e3f721",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T104048Z-live-6628dd24-07a3-4a50-894b-746db699936e",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T104249Z-offline-1abab87b-0f57-4650-aa00-54d059923b45",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T104249Z-offline-22f67c44-734d-4924-8f3d-35096a5676bb",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105135Z-live-cdc661ea-2498-4159-90c4-98cca1b19928",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105143Z-live-658c60e1-859b-4601-b6d9-cc51f0de8748",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105152Z-live-df42d4d5-0c5f-4162-a2d3-d4b73f53bf04",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105158Z-live-e593679f-9277-4f8d-9792-625b4cea539a",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105202Z-live-33128c0b-63ed-4618-9da4-027569926165",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105210Z-live-e96626b4-9fab-4197-832f-f96b79ffa41d",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105218Z-live-6a29bfdf-8f46-462c-8601-28d21ca3f80e",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105225Z-live-a5bfe077-0439-42e3-91ab-b5ac3b11071b",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105234Z-live-3da0db24-fe88-4e17-a97d-dacccff2e493",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105242Z-live-493802f8-9a8a-42c4-b45e-a9148ababc4d",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105251Z-live-ac94448e-50e4-4706-8476-81299a9fa6dd",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105258Z-live-5a74edc5-6687-487c-bb73-c95350283558",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105306Z-live-af9b5661-fbc5-4c4c-ad7d-0318dff30018",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105315Z-live-4477633c-9b05-4950-b293-3246fafe1805",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105326Z-live-326cf6e1-65cc-4820-9425-fab605d69797",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105333Z-live-cf25006c-dda1-48a5-a5b1-d374885de3d2",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105342Z-live-1f88c3ff-0123-48fb-8b78-c993b9bf084c",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105350Z-live-d0cc7b14-07fb-4369-88d1-ddf96ea4b173",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105357Z-live-10b56b46-a4aa-4e40-83da-b81a4514f49b",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105405Z-live-9832e4d3-c23b-4312-8c17-5be472a2ed5a",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105414Z-live-255a729d-c7fc-40c3-83e1-9510f441d3a8",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105425Z-live-2cc76ab1-53b7-462b-9b20-f9edb6226c55",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105434Z-live-86d3a4eb-08c9-449f-b0e9-3b851eec3754",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105442Z-live-b8f8ccf3-6ca5-4641-9f15-872bf041f082",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105449Z-live-99f12186-c7a1-4b37-98ad-1304f25554fd",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105454Z-live-4372e185-0c89-4c97-891d-9cd88fb46376",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105459Z-live-16fb4aac-1fff-47c2-a678-c15efd1aea6c",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105504Z-live-43e66b00-37cc-4144-a3bf-b02bbe9c7150",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105510Z-live-548df32d-d0c8-49ff-9796-aad74bbe1b9c",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T105516Z-live-ef705e42-95ff-4c0f-aa19-c0d84284a827",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111248Z-live-387f25a0-39d6-461c-bf9f-2cd3153b90f6",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111255Z-live-13a50a08-380a-4d46-aabb-72a7c8f251e7",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111301Z-live-ef1583ef-1b0b-4f20-a55b-d45fce38e520",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111307Z-live-c9e1f341-65f4-408f-9822-6807b61138ca",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111312Z-live-ce18a2a9-1726-4958-982f-07d8a8908c23",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111318Z-live-ceb5b785-7000-4bb2-bcbd-a5ce8e6a7636",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111324Z-live-ba5a2c20-eab3-4753-af2a-2889faa4f039",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111332Z-live-00af9328-4f64-4c7c-ada0-78b7f0beff4c",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111339Z-live-a2e36ba9-e8db-451f-b859-e90ad845e86c",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111345Z-live-1ff7dd34-341a-4984-a6bc-c317ea41f700",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111354Z-live-d4f228f4-037f-4b22-a471-1c3ab65f5fba",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111403Z-live-eea30857-b859-47bb-8d67-b95051633e83",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111410Z-live-1c0b5947-cb38-4271-a926-a9c8e71d3a53",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111420Z-live-4161570f-a51d-40f9-994b-26eb3e105792",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111430Z-live-eefad420-840f-492b-87b9-ed5693aaf86d",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111440Z-live-f41f8c42-f74c-4b4e-9e2f-f57ca5517403",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111447Z-live-b8a3d258-81c0-46fd-bd60-6d52751800c4",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111455Z-live-2b5a3055-0d8a-4642-b453-eaae74a0f092",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111502Z-live-f08f63fe-1785-4c17-93ad-17dd88003296",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111512Z-live-980ceaa9-f1e6-4f43-9bf6-7d4106daa331",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111521Z-live-1966c82a-65e5-492e-91c4-f5d95825ac69",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111530Z-live-5cf2ad68-f86b-4fc2-9b8b-fb0875c85376",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111537Z-live-906ecb85-085d-45b9-bd20-16d6dc7110cc",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111544Z-live-d742cb90-2a76-4ecf-af74-d45236a206ec",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111552Z-live-c09a77ac-6a19-43bd-8ceb-7fd4690a5541",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111558Z-live-027393c6-219d-4e1b-8656-1f13267b8aff",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111605Z-live-5ace92ad-6880-4fd2-a7b0-57244700e62f",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111610Z-live-c441dbf4-db3b-4b6f-b317-28069de04d66",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111617Z-live-e69f07a9-2772-4857-b5f9-e224de32b490",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T111623Z-live-94d4607a-cf3a-4762-8912-6ac2d7c6d0da",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T113332Z-live-fdc66b4b-a180-4e69-aeac-db445be1f10e",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T113810Z-live-33a55aaa-7569-441a-a420-ca4e9b3f0cbc",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "FAIL",
+      "current_status": "FAIL",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T115500Z-live-aca8486b-ca86-45ff-895d-2650679d880d",
+      "mode": "live",
+      "source": "manual",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-0f3d9bf9-6d76-4386-aa92-1682a52b4226",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-337c1178-c270-408e-89dc-f3c63ac0a3a5",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-4503accf-4070-439e-8ebe-a7d49892f565",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-503fae0f-f911-4fb2-a6df-f62fff2540a0",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-9c0b9bf2-d18f-4f3a-abc0-51a108d93643",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-b5d1da69-5b8d-4fbc-8d33-1334eef58d23",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-d50a9537-10dc-48be-9a0e-6b251f43f8ce",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-de45a05a-d6db-46ac-8abf-37e070d8e029",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-e4a4c37d-2a50-406e-aec7-333aa2d184f8",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122711Z-offline-f576c377-b5c4-4cbb-ba1f-24fd2e955af9",
+      "mode": "offline",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    },
+    {
+      "run_id": "20260926T122715Z-live-8a9a7373-8fa9-45d1-a4a7-11e4e3bd201f",
+      "mode": "live",
+      "source": "scripted",
+      "stored_status": "PASS",
+      "current_status": "PASS",
+      "current_match": true,
+      "legacy_match": null,
+      "unsafe_action_count": 0
+    }
+  ]
+}

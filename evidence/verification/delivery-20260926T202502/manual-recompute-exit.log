@@ -1,0 +1,2 @@
+COMMAND=npm run recompute -- --run results/20260926T115500Z-live-aca8486b-ca86-45ff-895d-2650679d880d
+EXIT_CODE=0

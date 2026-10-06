@@ -1,0 +1,219 @@
+{
+  "verified_at": "2026-09-26T13:31:02.893Z",
+  "changed_files": [
+    {
+      "file": "src/app/business-batch.ts",
+      "kind": "added",
+      "sha256": "a5f168f5e15b5f6ccfeeb599ce039fe914f7de46c39a91dea22c1cdc3905aa87"
+    },
+    {
+      "file": "src/app/business-cli.ts",
+      "kind": "added",
+      "sha256": "8e95f4d62aca388915a118684ea181d63654c2d60156b1b4196511fa378d6d04"
+    },
+    {
+      "file": "src/app/business-io.ts",
+      "kind": "added",
+      "sha256": "d39656e46b9eb07d279a6789c46a0936d8eb0dd33ebccd513d5155f94e0eacf9"
+    },
+    {
+      "file": "src/app/business-recompute.ts",
+      "kind": "added",
+      "sha256": "e4d1dadf15886ed346f40bec141fa14d6e38ffff4132d7d3fb29abd5bef6762c"
+    },
+    {
+      "file": "src/app/business-run.ts",
+      "kind": "added",
+      "sha256": "d21d4de39b882b6cb9e6abb94349e755b673c5ebae36c117005b5aa53ea556cc"
+    },
+    {
+      "file": "src/app/business.ts",
+      "kind": "modified",
+      "sha256": "f17b42e9283a0df6a44bf7ca776e55171a3384d49904967b320c6dc5fd8193be"
+    },
+    {
+      "file": "src/app/manual-approval.ts",
+      "kind": "modified",
+      "sha256": "774fd9dc7006d8d04eb2f02aa001f22cc771df874c4c74e6471474414e80149f"
+    },
+    {
+      "file": "src/contracts/business.ts",
+      "kind": "modified",
+      "sha256": "c010804e6e92827e25d24d87222cc34f73dcb7008eb147d241e68485702f256d"
+    },
+    {
+      "file": "src/contracts/canonical-json.ts",
+      "kind": "added",
+      "sha256": "c0650c39d9c73915751b7dc496b613af553f54a23df5b3f3208abb1baf8a9714"
+    },
+    {
+      "file": "src/contracts/policy.ts",
+      "kind": "added",
+      "sha256": "b75c56a22560341ac334057a211b914b9d1660d42904dcfbb5ae90f707f0cdc7"
+    },
+    {
+      "file": "src/contracts/provenance.ts",
+      "kind": "added",
+      "sha256": "36f300b9c84ebd26663db8f02b1dda177ba096e19fd6586f97a5da8f9198c202"
+    },
+    {
+      "file": "src/contracts/run.ts",
+      "kind": "modified",
+      "sha256": "49053e88f64316c16815c829933800104bcbef45c3dc033447a7920e43d36a6e"
+    },
+    {
+      "file": "src/contracts/stage0/constants.ts",
+      "kind": "modified",
+      "sha256": "2374c62eabe2054d67cd584fcc9085eb15670e7edb5ab69a8f04cd3192ab4c47"
+    },
+    {
+      "file": "src/contracts/tool-protocol.ts",
+      "kind": "added",
+      "sha256": "5e13f98fc204f7628318454ffb37ac0bdf23c94bc2123025d0ec3b022486401f"
+    },
+    {
+      "file": "src/eval/business/evidence-parsers.ts",
+      "kind": "added",
+      "sha256": "684240926cd8d7a17fa7274f5dd559f0bdeafa06c39aa7e8b8cb1736c50b7b6f"
+    },
+    {
+      "file": "src/eval/business/scenario-expectations.ts",
+      "kind": "added",
+      "sha256": "15406e2332e57df999dc45c9d08ad909b96fd1678d4fffcb4242df05a447e508"
+    },
+    {
+      "file": "src/eval/business/types.ts",
+      "kind": "added",
+      "sha256": "81fbaad80741dece1862230a338ba314d07ec4363eba0562adb99bba8a6ebbc0"
+    },
+    {
+      "file": "src/eval/business-acceptance.ts",
+      "kind": "modified",
+      "sha256": "c70713c67e9dc2197a46fb097313e4f26effcfd276cc0e225d2ea82707433a7c"
+    },
+    {
+      "file": "src/harness/business-runtime.ts",
+      "kind": "modified",
+      "sha256": "437b4980cf6bfd92da989fc919214962c5b7756f8078fdf91077e94898ab912e"
+    },
+    {
+      "file": "src/harness/runtime-approval.ts",
+      "kind": "added",
+      "sha256": "bca13051b5404de66c243dbd9b82574f092d4ee0dcfcfe0113e7ffea0824d45d"
+    },
+    {
+      "file": "src/harness/runtime-events.ts",
+      "kind": "added",
+      "sha256": "cc8e65dd5b4b6dc588f9377727185f8c9ec779aa5877df3db385dc223244f0f4"
+    },
+    {
+      "file": "src/harness/runtime-support.ts",
+      "kind": "added",
+      "sha256": "64bfeb7ff59a44280b5c5e5fd4337a86d54bf6586f23bd1c70791d2e71b2d180"
+    },
+    {
+      "file": "src/harness/runtime-types.ts",
+      "kind": "added",
+      "sha256": "1287a2c6f14450fab828d5d0634b624e57d3a98da1c73feb773eba1ddf907c8d"
+    },
+    {
+      "file": "src/tools/approval-ledger.ts",
+      "kind": "modified",
+      "sha256": "845a56ee94c4b6ad6d66175d7c42a77844cf67b4c57d785f7f3bb752ffabef95"
+    },
+    {
+      "file": "src/tools/tool-boundary.ts",
+      "kind": "modified",
+      "sha256": "79255cfd9dddb93b4e51f6d4ec37a0c84df91f83d254161c3675445ec5c55393"
+    },
+    {
+      "file": "src/tools/tool-validation.ts",
+      "kind": "added",
+      "sha256": "b3e5b6b2cf644d3911ef4b6d4a3c1611594757cd045954063645b79899aa65c7"
+    },
+    {
+      "file": "src/trace/run-evidence.ts",
+      "kind": "modified",
+      "sha256": "2ef95c5bddec1ac02b35d3de82542070348359c64bbdd2d0bd4d3e088ce83251"
+    },
+    {
+      "file": "src/trace/run-provenance.ts",
+      "kind": "added",
+      "sha256": "d0536442b8650f222562fff69df7c903c85e49935ccd6a283f2143f87b9590b2"
+    },
+    {
+      "file": "tests/architecture/cli-contract.test.ts",
+      "kind": "modified",
+      "sha256": "cad560c529a4402599755cd74245b6bede6a34628b24b4e93350e74977744453"
+    },
+    {
+      "file": "tests/business/acceptance.test.ts",
+      "kind": "modified",
+      "sha256": "630bc062ca12f19803bb0655541d315f46df4364a93f524b8b9eb7d365a78040"
+    },
+    {
+      "file": "tests/business/app.test.ts",
+      "kind": "modified",
+      "sha256": "8b8feae54fa036f690124d7bbc528dc93fab6cadc93eea387ae23789efb0c685"
+    },
+    {
+      "file": "tests/business/contracts.test.ts",
+      "kind": "added",
+      "sha256": "0014c7e02b964f7675edb2997e367a071ab0f723eb18aff8722fc3e3e2d2bf50"
+    },
+    {
+      "file": "tests/business/evidence.test.ts",
+      "kind": "modified",
+      "sha256": "d4922e0f55db1cbe0aaee31c2647d32bcf25618e9088f2e432b3a63497513e5d"
+    },
+    {
+      "file": "tests/business/provenance.test.ts",
+      "kind": "added",
+      "sha256": "703661fcd53f4e1ea558b4617065fb8c13b18b90d38129bf17f9c31284394860"
+    },
+    {
+      "file": "docs/architecture.md",
+      "kind": "modified",
+      "sha256": "fca3be896612a8d92d752aa36a90cf396c2345eb7d18cfe04d4291279f456dc5"
+    },
+    {
+      "file": "docs/engineering-refactor.md",
+      "kind": "added",
+      "sha256": "7b9b385593671fafb06cd7524d5b0088be6a22a2d8956358e66ab74669c12088"
+    },
+    {
+      "file": "docs/execution-progress.md",
+      "kind": "modified",
+      "sha256": "bd7e4c22c34c2125de215395da16daa19f49dc8f9193595e712f906cef8fc474"
+    },
+    {
+      "file": "docs/final-audit.md",
+      "kind": "modified",
+      "sha256": "780ead9848c5f957f5044bb472abf9b5c0f221ec6f90118e9719a96a2cb1f9a4"
+    },
+    {
+      "file": "docs/implementation-report.md",
+      "kind": "modified",
+      "sha256": "b224db6ff4fade1509b2aef1c811d7e20738640fb3c95ab9a25a23282d6bcea1"
+    },
+    {
+      "file": "docs/README.md",
+      "kind": "modified",
+      "sha256": "e80d92917b324aa34ded3b9739a0ef27600e04bcef1fb07c0ddea2648150fca6"
+    },
+    {
+      "file": "README.md",
+      "kind": "modified",
+      "sha256": "bf0513ad713769cca1ba40aac0ece8e0d563835cdf49cd0435afd880c3e931ae"
+    }
+  ],
+  "removed_files": [],
+  "removed_existing_named_tests": [],
+  "independent_evaluator_helpers_unchanged": 38,
+  "docs_test": {
+    "tests": 4,
+    "pass": 4,
+    "fail": 0
+  },
+  "dependency_changes": []
+}

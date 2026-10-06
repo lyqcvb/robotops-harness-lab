@@ -1,0 +1,10 @@
+[
+  {
+    "Path": ".\\src\\harness\\business-runtime.ts",
+    "Hash": "3E9D12831946832ECA7A6EE3A9024C1B5700265156A31ACE9D5D23C735E8C410"
+  },
+  {
+    "Path": ".\\src\\harness\\business-scenarios.ts",
+    "Hash": "684C0FC35FBCCBA7CFA5D4487B45ED8B09A76DAC236181FB925CFAA8454E297E"
+  }
+]

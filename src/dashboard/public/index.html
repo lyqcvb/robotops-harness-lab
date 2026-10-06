@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="RobotOps Harness Lab 场景与策略评估总览">
+  <title>RobotOps Harness Lab · 场景与策略评估</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup" aria-label="RobotOps Harness Lab">
+        <strong>RobotOps Harness Lab</strong>
+        <span>历史固定场景与策略评估</span>
+      </div>
+      <div class="readonly-badge">
+        <span class="readonly-dot" aria-hidden="true"></span>
+        <span>历史固定场景 · 只读 / Robot Simulator</span>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="overview-grid" aria-label="场景与策略评估总览">
+        <article class="hero-card hero-card--compact">
+          <p class="eyebrow" id="overview-eyebrow">只读评估总览</p>
+          <div class="hero-heading">
+            <div>
+              <h1 id="overview-title">场景与策略评估</h1>
+              <p class="hero-copy" id="overview-summary">正在加载历史运行列表并聚合场景与策略。</p>
+            </div>
+            <span class="status-pill status-pill--neutral" id="overview-run-state">等待加载</span>
+          </div>
+
+          <p class="scope-note">历史固定场景 / 模拟器；非生产可靠性估计。</p>
+          <p class="scope-note scope-note--secondary" id="batch-scope-note">跨批次/版本描述性汇总。</p>
+
+          <dl class="summary-grid" aria-label="筛选摘要">
+            <div class="summary-item">
+              <dt>筛选运行</dt>
+              <dd><strong id="summary-runs">—</strong></dd>
+            </div>
+            <div class="summary-item">
+              <dt>场景数</dt>
+              <dd><strong id="summary-scenarios">—</strong></dd>
+            </div>
+            <div class="summary-item">
+              <dt>策略分组数</dt>
+              <dd><strong id="summary-groups">—</strong></dd>
+            </div>
+            <div class="summary-item">
+              <dt>证据问题运行数</dt>
+              <dd><strong id="summary-defects">—</strong></dd>
+            </div>
+          </dl>
+
+          <div class="runtime-strip" aria-labelledby="runtime-title">
+            <span class="eyebrow">执行目标</span>
+            <strong id="runtime-title">Robot Simulator</strong>
+            <code>历史证据回放 · 无执行能力</code>
+            <span>页面只读取已结束运行的服务端证据，不连接实时机器人，不批准审批，也不触发任何动作。</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="control-panel" aria-labelledby="controls-title">
+        <div class="control-copy">
+          <strong id="controls-title">筛选历史运行</strong>
+          <span>Agent 驱动方式、审批来源与批次只用于前端分组筛选；不会自动加载单次运行详情。live 调用真实模型，offline 使用预设脚本；两者均操作模拟器。</span>
+        </div>
+        <div class="control-actions control-actions--filters">
+          <div class="filter-field">
+            <label class="select-label" for="mode-select">Agent 驱动方式</label>
+            <select id="mode-select" aria-describedby="controls-status" disabled>
+              <option value="">正在加载…</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label class="select-label" for="approval-source-select">审批来源</label>
+            <select id="approval-source-select" aria-describedby="controls-status" disabled>
+              <option value="all">all（全部来源）</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label class="select-label" for="batch-select">批次</label>
+            <select id="batch-select" aria-describedby="controls-status" disabled>
+              <option value="all">all（全部历史）</option>
+            </select>
+          </div>
+        </div>
+        <button class="refresh-button" id="refresh-runs" type="button" disabled>
+          <span aria-hidden="true">↻</span>
+          <span>刷新历史</span>
+        </button>
+        <p class="controls-status" id="controls-status" role="status" aria-live="polite">正在准备历史运行列表…</p>
+      </section>
+
+      <section class="notice" id="page-notice" role="alert" hidden aria-live="assertive">
+        <h2 id="notice-title">状态提示</h2>
+        <p id="notice-message"></p>
+        <ul id="notice-details"></ul>
+      </section>
+
+      <section class="truncation-notice" id="truncation-notice" role="status" hidden>
+        <strong>接口截断，非全量统计</strong>
+        <span id="truncation-message">服务端返回 truncated=true；当前列表不能视为完整统计。</span>
+      </section>
+
+      <section class="scenario-stack" id="scenario-sections" aria-label="五场景策略比较">
+        <p class="empty-state">正在准备场景分组。</p>
+      </section>
+
+      <section class="evidence-area" id="evidence-section" hidden aria-labelledby="evidence-title">
+        <header class="panel-head evidence-head">
+          <div>
+            <p class="eyebrow">Group Evidence</p>
+            <h2 id="evidence-title">运行证据</h2>
+            <p id="evidence-summary">选择“查看组内证据”后加载单次运行详情。</p>
+          </div>
+          <span class="panel-kicker" id="evidence-count">0 runs</span>
+        </header>
+
+        <div class="evidence-controls">
+          <label class="select-label" for="run-select">组内 Run ID</label>
+          <select id="run-select" aria-describedby="evidence-status" disabled>
+            <option value="">尚未选择证据组</option>
+          </select>
+          <p class="evidence-status" id="evidence-status" role="status" aria-live="polite">尚未选择证据组。</p>
+        </div>
+
+        <dl class="meta-grid evidence-meta" aria-label="当前证据组">
+          <div class="meta-item">
+            <dt>当前证据组</dt>
+            <dd><span class="wrap-anywhere" id="overview-run-id">—</span></dd>
+          </div>
+          <div class="meta-item">
+            <dt>场景</dt>
+            <dd><span class="wrap-anywhere" id="overview-scenario">—</span></dd>
+          </div>
+          <div class="meta-item">
+            <dt>审批来源</dt>
+            <dd><strong id="overview-approval-source">—</strong></dd>
+          </div>
+          <div class="meta-item">
+            <dt>Agent 驱动方式</dt>
+            <dd><strong id="overview-mode">—</strong></dd>
+          </div>
+        </dl>
+
+        <div class="workspace-grid" aria-label="运行详情">
+          <article class="panel timeline-panel" aria-labelledby="timeline-title">
+            <header class="panel-head">
+              <div>
+                <p class="eyebrow">Business Trace</p>
+                <h2 id="timeline-title">编号执行时间线</h2>
+                <p id="timeline-summary">选择运行后按 seq 呈现真实业务事件。</p>
+              </div>
+              <span class="panel-kicker" id="timeline-count">0 events</span>
+            </header>
+            <div class="timeline-list" id="timeline-list">
+              <p class="empty-state">等待组内证据选择。</p>
+            </div>
+          </article>
+
+          <aside class="right-rail" aria-label="审批、终态与指标">
+            <article class="panel compact-panel" aria-labelledby="approval-title">
+              <header class="panel-head">
+                <div>
+                  <p class="eyebrow">Permission Boundary</p>
+                  <h2 id="approval-title">审批记录</h2>
+                </div>
+                <span class="panel-kicker">只读</span>
+              </header>
+              <div class="approval-list" id="approval-list">
+                <p class="empty-state">等待运行详情。</p>
+              </div>
+            </article>
+
+            <article class="panel compact-panel" aria-labelledby="state-title">
+              <header class="panel-head">
+                <div>
+                  <p class="eyebrow">Terminal Readback</p>
+                  <h2 id="state-title">终态状态读回</h2>
+                </div>
+                <span class="panel-kicker">run_finished</span>
+              </header>
+              <div class="state-readback" id="state-readback">
+                <p class="empty-state">终态未知。</p>
+              </div>
+            </article>
+
+            <article class="panel compact-panel" aria-labelledby="metrics-title">
+              <header class="panel-head">
+                <div>
+                  <p class="eyebrow">Acceptance Metrics</p>
+                  <h2 id="metrics-title">验收与动作计数</h2>
+                </div>
+                <span class="panel-kicker">metrics.json</span>
+              </header>
+              <div class="metrics-view" id="metrics-view">
+                <p class="empty-state">等待 metrics 证据。</p>
+              </div>
+            </article>
+          </aside>
+        </div>
+
+        <details class="evidence-shell">
+          <summary>
+            <span>
+              <strong>四文件证据</strong>
+              <small>manifest / business-events / native-events / metrics</small>
+            </span>
+            <span class="summary-hint">只读 JSON</span>
+          </summary>
+          <div class="evidence-body">
+            <p class="evidence-note">
+              证据由服务端只读提供并已脱敏。原生事件仅作存档展示，本页不会重放、批准、执行或重新计算任何内容。
+            </p>
+            <div class="evidence-grid">
+              <details class="evidence-block">
+                <summary>manifest</summary>
+                <p>运行清单与审批来源、模式等元数据。</p>
+                <pre id="evidence-manifest">（等待加载）</pre>
+              </details>
+              <details class="evidence-block">
+                <summary>business-events</summary>
+                <p>任务级业务事件完整存档，按服务端原始顺序展示。</p>
+                <pre id="evidence-business">（等待加载）</pre>
+              </details>
+              <details class="evidence-block">
+                <summary>native-events</summary>
+                <p>原生 Runtime 事件只读存档，不对前端重放。</p>
+                <pre id="evidence-native">（等待加载）</pre>
+              </details>
+              <details class="evidence-block">
+                <summary>metrics</summary>
+                <p>已结束运行保存的验收与计数指标。</p>
+                <pre id="evidence-metrics">（等待加载）</pre>
+              </details>
+            </div>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

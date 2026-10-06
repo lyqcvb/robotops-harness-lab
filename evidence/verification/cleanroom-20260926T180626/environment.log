@@ -1,0 +1,10 @@
+SOURCE=.
+CLEANROOM=<tmp>\robotops-cleanroom-811c3b00fc844e3098d8d9b6d747aa5e
+LOG_DIR=.\evidence\verification\cleanroom-20260926T180626
+DATE=
+2026-09-26T18:06:26.7634498+08:00
+NODE=
+v24.14.0
+NPM=
+11.9.0
+CREDENTIALS_COPIED=false

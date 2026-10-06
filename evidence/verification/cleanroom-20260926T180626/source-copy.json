@@ -1,0 +1,212 @@
+[
+  {
+    "path": "src\\app\\business.ts",
+    "sha256": "4bd2481c3ea326b82532ff01c6184e0dd8be38c47fe37b606acd3caa89bd9f23",
+    "matches": true
+  },
+  {
+    "path": "src\\app\\manual-approval.ts",
+    "sha256": "6c6ab93ee4daf494d4a3125a81f86e2ecade1e8f4e5b5d49d777c0ba44a442d9",
+    "matches": true
+  },
+  {
+    "path": "src\\app\\stage0\\probe.ts",
+    "sha256": "a541d1cce8414fc38e7cb9cc007eee33d1aa0f8c7ee7048495dc99b6e12c9f52",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\business.ts",
+    "sha256": "2cbada71b1420fa120f5abb30ce33d145955ea864e0ec94400d7911ab23b644f",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\run.ts",
+    "sha256": "154b2a5abc5ef3f1877be9e4509d013dbe2be21a1950dd452a0290acc7a4247d",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\stage0\\acceptance.ts",
+    "sha256": "33a5b2222135be39e608dc1318c500893a0756f28b24a2c77221a891046573bc",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\stage0\\constants.ts",
+    "sha256": "e375d430015019781285c9753a0850ea22c395cd595db0e5ce33b7b8efa8922b",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\stage0\\evidence.ts",
+    "sha256": "d4dfe94a415a7d39caf66b8e30fd99cc5fd55477c58bc9b5a56ed6c94faa75bd",
+    "matches": true
+  },
+  {
+    "path": "src\\contracts\\stage0\\probe.ts",
+    "sha256": "b7b2b62219ef9043588eb815182c9296f9e0e84cc0e78fdd0b7791eb2aa46c39",
+    "matches": true
+  },
+  {
+    "path": "src\\eval\\business-acceptance.ts",
+    "sha256": "5ed4e5d712c05f7bc90891145087c979d5e3a0ec15ff1c493c1e5fc03f73ea66",
+    "matches": true
+  },
+  {
+    "path": "src\\eval\\business-report.ts",
+    "sha256": "6eb208a548cfe61dff18bb7cb63eb8d13159c66ad9d825f3a8970720be2c5795",
+    "matches": true
+  },
+  {
+    "path": "src\\eval\\stage0\\acceptance.ts",
+    "sha256": "e349cba0a9f6fb5f38fc9a6ca928b4edfe5adb151bb22fafcd2b12cdfe9ebd26",
+    "matches": true
+  },
+  {
+    "path": "src\\eval\\stage0\\report.ts",
+    "sha256": "e3a021e30697bc96f2ff2414d676632c4790bd4b0c9a392fbb8ddbd838e87990",
+    "matches": true
+  },
+  {
+    "path": "src\\harness\\business-runtime.ts",
+    "sha256": "3e9d12831946832eca7a6ee3a9024c1b5700265156a31ace9d5d23c735e8c410",
+    "matches": true
+  },
+  {
+    "path": "src\\harness\\business-scenarios.ts",
+    "sha256": "684c0fc35fbccba7cfa5d4487b45ed8b09a76dac236181fb925cfaa8454e297e",
+    "matches": true
+  },
+  {
+    "path": "src\\harness\\stage0\\probe-runtime.ts",
+    "sha256": "785080bfe1fa2a4e85fbd1fd7ca4f45befef7af8a132ca3caf5e3199362a1185",
+    "matches": true
+  },
+  {
+    "path": "src\\harness\\stage0\\scenarios.ts",
+    "sha256": "760e5717e83194ae40ce1a7c73efa863a7a1039d49d70ad26fc6d2db8f4ba439",
+    "matches": true
+  },
+  {
+    "path": "src\\harness\\stage0\\scripted-adapter.ts",
+    "sha256": "6d07126b3d33ec95ad46551ca88a18b78e38ef26288ed2c2c12e772cf4ffa476",
+    "matches": true
+  },
+  {
+    "path": "src\\services\\business-services.ts",
+    "sha256": "1f56bfb8aab5d2a9470f365ab3f2d576b2637693bf166d25e569b9b2fe085bf8",
+    "matches": true
+  },
+  {
+    "path": "src\\simulator\\robot-simulator.ts",
+    "sha256": "2e5e5a131a2c6aaa4a2b738cddda3c38e300a36f8ae5942314b83e4db075293b",
+    "matches": true
+  },
+  {
+    "path": "src\\tools\\approval-ledger.ts",
+    "sha256": "fcc2c49fa391ecb2f67ed6279ae0e59281e66af140059e01a656501078d2e01a",
+    "matches": true
+  },
+  {
+    "path": "src\\tools\\tool-boundary.ts",
+    "sha256": "d33236382dd78d1276aec362b514532ba9ed7bdc51cb25d2b267d7d7ce0f34d0",
+    "matches": true
+  },
+  {
+    "path": "src\\trace\\business-trace.ts",
+    "sha256": "2e23f5b7b6c460df0406f8df4f3ffd7cd6b437889f6b3c272ddc2b25025a2a04",
+    "matches": true
+  },
+  {
+    "path": "src\\trace\\run-evidence.ts",
+    "sha256": "7f05d249ca1eb65e78d3def301739ad1a7d56e813a697faf73089b3b93354feb",
+    "matches": true
+  },
+  {
+    "path": "src\\trace\\stage0\\evidence.ts",
+    "sha256": "1cdd730eeca63d7428e9dcd44b46587f1f7c6651ea3ee52862a5aef096a2540c",
+    "matches": true
+  },
+  {
+    "path": "scripts\\business.ts",
+    "sha256": "cc8d7d8549b0dc7c2def9dfa3ee488c76c207840099f3844b6b6e81a194b086f",
+    "matches": true
+  },
+  {
+    "path": "scripts\\stage0\\not-implemented.mjs",
+    "sha256": "1388e9e3bb031f23066d882072f138af78f068a9099882900eb88dac3d041b95",
+    "matches": true
+  },
+  {
+    "path": "scripts\\stage0\\probe.ts",
+    "sha256": "25e426a69c414ebe6f1194cabe25386e079abc8add032a4c9a0da9ec3ab346d0",
+    "matches": true
+  },
+  {
+    "path": "tests\\architecture\\cli-contract.test.ts",
+    "sha256": "74df79be6eeb319dcffeec8f096a32c524b188c36731b043d97827b9b43a9ba5",
+    "matches": true
+  },
+  {
+    "path": "tests\\architecture\\dependencies.test.ts",
+    "sha256": "d42703eaad64ad9ee9674e3ce8c9ab9f69877ed76304821106f262d65802c325",
+    "matches": true
+  },
+  {
+    "path": "tests\\architecture\\docs.test.ts",
+    "sha256": "fbc537b26314f5398848c035f1e5c456260ec2b89a5778f583ee48b8b10b5ee6",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\acceptance.test.ts",
+    "sha256": "0d293b6dc5e6b8bea39138a3e9bb2dfe1e15e6335149fdc1e44fb0f4ff6c18e8",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\app.test.ts",
+    "sha256": "d3d28c11da0586ab709638582f32e5faf817487dc02b4749529b6bf881c29e86",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\approval.test.ts",
+    "sha256": "fd4cd86b221e926aecc7a75ebfc384a971553126d04d19baaca6b114f497feee",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\evidence.test.ts",
+    "sha256": "b97566b4f125efb8b1e91da6c0e17e8e11eea915d48a8e964d34a5fd11ee83ec",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\policy.test.ts",
+    "sha256": "6c502ec40114208fe23530af0687aca62b6c84ae7c1ea37ddcb9f20c2a481fe2",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\runtime.test.ts",
+    "sha256": "c963d3480235b62a7fa3d9bce2aa700b866651a8cc69689a99fa8341e13d52ef",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\services.test.ts",
+    "sha256": "d209e0c436ea517eb7ee257bf3e276ace920f242b772fef26977f73f978ddefc",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\simulator.test.ts",
+    "sha256": "46924abca7b4df7b7c00e6f7d0a61eef08aa00f84a325e1f356c0026b52b6df7",
+    "matches": true
+  },
+  {
+    "path": "tests\\business\\trace.test.ts",
+    "sha256": "5d9e739a4c4721c73bb4b1032acf7c5187ca2328ddb04f835f50e9750c3b8ca5",
+    "matches": true
+  },
+  {
+    "path": "tests\\stage0\\probe.test.ts",
+    "sha256": "240edcfd36e236d99557da463112d6a63d821e6c8f2275e6c861322ad6fc160c",
+    "matches": true
+  },
+  {
+    "path": "tests\\stage0\\toolchain.test.ts",
+    "sha256": "98d2b0e3a221c7a616f6ee0120d1f91d8b718327be038b2fc8ff51087291f7f6",
+    "matches": true
+  }
+]

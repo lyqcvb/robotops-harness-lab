@@ -1,0 +1,2 @@
+COMMAND=node --test build/tests/architecture/docs.test.js
+EXIT_CODE=0

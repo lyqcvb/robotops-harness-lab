@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "run_id": "20260926T111624Z-offline-538313e3-002c-4045-a40a-ef162fa69651",
+  "created_at": "2026-09-26T11:16:24.606Z",
+  "scenario_id": "approval_rejected",
+  "mode": "offline",
+  "model": "scripted-business-v1",
+  "config": "fail-fast",
+  "approval_source": "scripted",
+  "batch_id": "20260926T111624Z-integration-batch-de6f99ad-2978-494b-9058-78e6b4b12528",
+  "repeat": 1,
+  "fixture_sha256": "574ab454cc380486ea134cd9df8f20bcb73e5cfebda6f8d1cfd5915146dc7e84",
+  "prompt_sha256": "1f39596cb7781889e60bfe5aa917638a9080d6c7f9dab94c0dd2685bec50845e",
+  "config_sha256": "6ea0aee8cf92c1353b20c78c3a9ef9b1083ea1d5eaaf7a56d558f1b98d94801d",
+  "lockfile_sha256": "sha256:bbbeec756820f49b373e0ec9c3b98c7b81ea3c63c3ea62f973e23b254233eb88",
+  "installed_versions": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-agent": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-agent-loop": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-llm-deepseek": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-scope": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session-projection": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-system-prompt": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-tools": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-user-approval": "0.1.5-rc.3"
+  },
+  "harness_version": "0.1.5-rc.3"
+}

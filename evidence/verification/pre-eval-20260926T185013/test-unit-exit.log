@@ -1,0 +1,2 @@
+COMMAND=npm run test:unit
+EXIT_CODE=0

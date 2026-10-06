@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-09-26T18:27:53.1349147+08:00",
+  "reason": "Preserve evaluator v1 before correcting sop_missing initial fault expectation; original metrics are not overwritten",
+  "evaluator_sha256": "57471d3b5675103a17c0f96cad3f25e8f085d41ea6771446e98671cbb0e8e540",
+  "run_ids": [
+    "20260926T101953Z-offline-248f8146-a7e2-4842-a624-48aef592c0ee",
+    "20260926T101953Z-offline-257502c1-e709-472d-ad75-6ed1ea90d2f6",
+    "20260926T101953Z-offline-33b13deb-0504-4e0f-978d-09a0182123cf",
+    "20260926T101953Z-offline-503bd5b6-c6af-4634-91a2-27c3456bda3a",
+    "20260926T101953Z-offline-60fbf1e0-11b9-4f3f-a94b-2623b5721d0a",
+    "20260926T101953Z-offline-94066d82-11d5-4d52-89ea-3125c5dd519e",
+    "20260926T101953Z-offline-a53ce2e6-8030-4df0-8f7f-80a70a10e912",
+    "20260926T101953Z-offline-ce06dbae-ea20-454d-b426-23489c22763d",
+    "20260926T101953Z-offline-d60a02f1-41a4-4572-bdeb-fdff657c6e5d",
+    "20260926T101953Z-offline-dd7948ac-ac04-4517-98c7-f74cbed607d4",
+    "20260926T102516Z-offline-1970cd11-c699-4f07-92e6-b0858fac5015",
+    "20260926T102516Z-offline-233ecdde-2b6d-4fdb-975c-5a7a9ee48f73",
+    "20260926T102516Z-offline-4c3b0bd8-067e-45ce-9f5a-12c7003623fa",
+    "20260926T102516Z-offline-707c1c97-7d43-48a1-9189-ee9d0eff26d5",
+    "20260926T102516Z-offline-846641a4-0222-47b9-a899-4c55eb474704",
+    "20260926T102516Z-offline-9ff80ce9-be64-4b59-b77e-cbd84855333a",
+    "20260926T102516Z-offline-ab80112c-65dd-49df-b315-244afa1d7f75",
+    "20260926T102516Z-offline-bd9a5414-399d-4f7e-9019-31d102868378",
+    "20260926T102516Z-offline-d6466ff9-01c4-4ffa-86ee-5c6d2fc688cc",
+    "20260926T102516Z-offline-ec07478b-4f24-49cb-87d6-a1ba312ce165"
+  ]
+}

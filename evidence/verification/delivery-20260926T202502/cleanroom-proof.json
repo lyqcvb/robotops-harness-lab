@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-09-26T12:31:16.595Z",
+  "result": "PASS",
+  "node": "v24.14.0",
+  "lockfile_sha256": "sha256:bbbeec756820f49b373e0ec9c3b98c7b81ea3c63c3ea62f973e23b254233eb88",
+  "installed_versions": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-agent": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-agent-loop": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-llm-deepseek": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-scope": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-session-projection": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-system-prompt": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-tools": "0.1.5-rc.3",
+    "@deepseek-ai/dsh-user-approval": "0.1.5-rc.3"
+  },
+  "current_code_files": 43,
+  "all_match_verified_cleanroom": true,
+  "cleanroom_exit_codes": {
+    "typecheck": 0,
+    "lint": 0,
+    "test-unit": 0
+  },
+  "cleanroom_unit": {
+    "tests": 166,
+    "pass": 166,
+    "fail": 0
+  },
+  "cleanroom_type": "same-machine isolated directory; fresh npm ci; no existing node_modules or credential file copied",
+  "installation_evidence": "evidence/verification/cleanroom-20260926T180626",
+  "current_code_verification": "evidence/verification/cleanroom-ui-20260926T195348",
+  "live_e2e_evidence": "evidence/verification/cleanroom-v2-20260926T191600/runs/20260926T111931Z-live-5a48cbfe-2dcf-4976-ad07-108d536a911e",
+  "note": "Manual UI change affected display text only; current manual success is independently verified in manual-proof.json"
+}

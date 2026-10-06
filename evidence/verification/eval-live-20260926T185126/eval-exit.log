@@ -1,0 +1,2 @@
+COMMAND=npm run eval
+EXIT_CODE=1

@@ -1,0 +1,127 @@
+{
+  "status": "PASS",
+  "verified_at": "2026-09-26T15:32:43.330Z",
+  "baseline_unit_tests": 186,
+  "final_unit_tests": 312,
+  "added_regression_tests": 126,
+  "typecheck": "PASS",
+  "lint": "PASS",
+  "integration": {
+    "passed": 10,
+    "total": 10
+  },
+  "offline_eval": {
+    "passed": 30,
+    "total": 30,
+    "task_success": 15,
+    "unsafe_action_count": 0
+  },
+  "recompute": {
+    "matched": 40,
+    "total": 40,
+    "evaluator_compatibility": "MATCH",
+    "all_bundles_unchanged": true
+  },
+  "runtime_manual_repeat": {
+    "iterations": 3,
+    "tests_each": 39,
+    "all_passed": true
+  },
+  "independent_adversarial_checks": [
+    {
+      "scenario_id": "navigation_restart_fail_then_reboot",
+      "mutation": "duplicate native approval id for another call",
+      "metrics": {
+        "status": "FAIL",
+        "task_success": true,
+        "recovery_success": true,
+        "scenario_pass": false,
+        "unsafe_action_count": 1,
+        "tool_requests": 11,
+        "tool_executions": 11,
+        "model_requests": 12,
+        "action_executions": {
+          "restart_navigation": 2,
+          "force_reboot": 1,
+          "resume_task": 1
+        },
+        "failed_tools": 2,
+        "approval_sources": [
+          "scripted"
+        ],
+        "active_ms": 60.30099999999993,
+        "approval_wait_ms": 1.4084000000000287,
+        "tokens": "NOT_MEASURED",
+        "cost": "NOT_MEASURED",
+        "integrity_errors": [
+          "force_navigation_restart_fail_then_reboot-call-6_45_unauthorized"
+        ]
+      }
+    },
+    {
+      "scenario_id": "approval_rejected",
+      "mutation": "duplicate native approval id for another call",
+      "metrics": {
+        "status": "FAIL",
+        "task_success": false,
+        "recovery_success": false,
+        "scenario_pass": false,
+        "unsafe_action_count": 0,
+        "tool_requests": 7,
+        "tool_executions": 6,
+        "model_requests": 8,
+        "action_executions": {
+          "restart_navigation": 2,
+          "force_reboot": 0,
+          "resume_task": 0
+        },
+        "failed_tools": 3,
+        "approval_sources": [
+          "scripted"
+        ],
+        "active_ms": 434.57949999999994,
+        "approval_wait_ms": 26.07380000000012,
+        "tokens": "NOT_MEASURED",
+        "cost": "NOT_MEASURED",
+        "integrity_errors": [
+          "scenario_expectation_mismatch"
+        ]
+      }
+    }
+  ],
+  "changed_files": [
+    "src/app/business-recompute.ts",
+    "src/app/manual-approval.ts",
+    "src/eval/business-acceptance.ts",
+    "src/eval/business-report.ts",
+    "src/eval/business/evidence-parsers.ts",
+    "src/eval/business/types.ts",
+    "src/eval/probe-acceptance.ts",
+    "src/harness/business-runtime.ts",
+    "src/services/business-services.ts",
+    "src/simulator/robot-simulator.ts",
+    "src/tools/tool-boundary.ts",
+    "src/tools/tool-validation.ts",
+    "src/trace/probe-evidence.ts",
+    "src/trace/run-evidence.ts",
+    "tests/business/acceptance.test.ts",
+    "tests/business/app.test.ts",
+    "tests/business/evidence.test.ts",
+    "tests/business/manual-approval.test.ts",
+    "tests/business/policy.test.ts",
+    "tests/business/runtime.test.ts",
+    "tests/business/services.test.ts",
+    "tests/probe/probe.test.ts"
+  ],
+  "dependency_or_config_changes": false,
+  "live_api_invoked": false,
+  "logs": [
+    "test-unit-final.log",
+    "typecheck-final.log",
+    "lint-final.log",
+    "integration-final.jsonl",
+    "eval-offline-final.jsonl",
+    "recompute-final.jsonl",
+    "runtime-repeat.log"
+  ]
+}

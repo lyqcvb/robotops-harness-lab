@@ -1,0 +1,22 @@
+[
+  {
+    "command": "npm run typecheck",
+    "exit_code": 0
+  },
+  {
+    "command": "npm run lint",
+    "exit_code": 0
+  },
+  {
+    "command": "npm run test:unit",
+    "exit_code": 0
+  },
+  {
+    "command": "npm run test:integration",
+    "exit_code": 0
+  },
+  {
+    "command": "npm run eval -- --offline",
+    "exit_code": 0
+  }
+]

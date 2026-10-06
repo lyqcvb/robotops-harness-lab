@@ -1,0 +1,25 @@
+node_modules/
+build/
+.env
+.env.*
+!.env.example
+.stage0/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated run artifacts.
+#
+# `evidence/` and `results/` are produced by this project's own commands
+# (`npm run eval`, `npm run test:integration`, `npm run demo`, `npm run probe:*`)
+# and grow by tens of MB. Only the curated subset the documentation actually cites
+# is committed, so a fresh clone is small but still backed by real evidence.
+# tests/architecture/docs.test.ts enforces that the curated subset stays present.
+evidence/*
+!evidence/verification/
+results/*
+!results/batches/
+!results/20260926T113332Z-live-fdc66b4b-a180-4e69-aeac-db445be1f10e/
+!results/20260926T113810Z-live-33a55aaa-7569-441a-a420-ca4e9b3f0cbc/
+!results/20260926T115500Z-live-aca8486b-ca86-45ff-895d-2650679d880d/

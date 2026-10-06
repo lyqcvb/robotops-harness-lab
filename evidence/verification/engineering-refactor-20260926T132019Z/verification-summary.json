@@ -1,0 +1,367 @@
+{
+  "verified_at": "2026-09-26T13:23:20.114Z",
+  "status": "PASS_WITH_EXPECTED_LEGACY_DIFFERENCES",
+  "typecheck_exit": 0,
+  "lint_exit": 0,
+  "unit": {
+    "tests": 182,
+    "pass": 182,
+    "fail": 0,
+    "skipped": 0
+  },
+  "integration": {
+    "runs": 10,
+    "pass": 10
+  },
+  "offline_eval": {
+    "runs": 30,
+    "pass": 30,
+    "task_success": 15,
+    "unsafe_action_count": 0
+  },
+  "historical_metrics": {
+    "checked": 108,
+    "unchanged": 108,
+    "changes": []
+  },
+  "historical_files": {
+    "checked": 736,
+    "unchanged": 736,
+    "changes": []
+  },
+  "recompute": {
+    "checked": 148,
+    "metrics_match": 144,
+    "expected_legacy_differences": [
+      "20260926T101953Z-offline-33b13deb-0504-4e0f-978d-09a0182123cf",
+      "20260926T101953Z-offline-d60a02f1-41a4-4572-bdeb-fdff657c6e5d",
+      "20260926T102516Z-offline-bd9a5414-399d-4f7e-9019-31d102868378",
+      "20260926T102516Z-offline-ec07478b-4f24-49cb-87d6-a1ba312ce165"
+    ],
+    "exit_code": 1
+  },
+  "new_runs": [
+    {
+      "run_id": "20260926T132131Z-offline-1f079582-fa73-4a1d-89de-2bbc5f6d78e9",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-32d8823b-e736-4d7a-a5fd-6de8633d2c88",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-3d632bc8-88db-498d-b583-08eacd76d92f",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-444d66c5-f1bb-47e0-9c5a-151377c931f3",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-499446df-42dc-4f80-bb55-aa865ed77c27",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-7b1e4803-64c9-46c4-a4c6-6a06c7b3a844",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-a65650a3-4cc9-4976-9d52-5ab2528ca773",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-d6839913-6cd1-4091-b882-e758dfe530bc",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-e58a76c7-5440-404a-80ae-075b4875c4d4",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132131Z-offline-f7819aa0-f55a-4c11-a902-3851d8198f3b",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-1967999c-6210-490e-b45a-7e5c4143efa7",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-3c26b802-54fd-4e43-9022-a1d07bed808c",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-6d492d5c-1d86-4b47-8f56-85c4acc83d9c",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-6eb8d52a-8fc6-4f7b-b8ea-9e9a161e1d51",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-736b2c16-570a-40d9-b8fb-c7d49ec07132",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-9c32d532-de10-4058-a51e-d1c286970bd3",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-b1aa8c68-023d-4a1a-8f96-b04f8a49b2cc",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132136Z-offline-e98f2e32-9859-4f3b-b692-c4b04c3aa16c",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-092c1e40-5593-4958-b024-a4f4fabdab58",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-0e3121db-6a8e-449e-b610-921f5e0ae5ba",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-20f90080-97c2-4752-83db-da02d4c986ea",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-27d6765e-d813-408b-ac4b-0a42c514e03a",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-2bb78411-3ba7-4d34-b096-0f1dd2f009e7",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-569d05b3-2f61-4905-8af3-b0e20e6177b3",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-5a1969c8-af91-4c19-a9e5-fc482ab39cfc",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-5d5e0682-6699-4b13-9a0f-d3c22418d8de",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-636bee17-42eb-4efb-8608-1c2cf9fc7a2c",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-64b95037-9220-4b2d-8205-6be499e7b1fe",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-7c17df6d-25ef-4b16-8108-54ad52f29800",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-8d796e7a-c161-4a5b-85be-fae3112ce6a1",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-91e76565-5c6d-4161-acf2-b71411d21ad7",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-afc2629c-e8e9-457e-9a57-d46eb13c5ff5",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-babc668b-aa25-40e3-b769-aac9daa8be65",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-c089cccb-ad4e-4586-9926-05f307a1e922",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132137Z-offline-e2adc755-c518-4227-aef6-41003be8fbe2",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132138Z-offline-2f260afb-f68f-499c-9369-718460f54339",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132138Z-offline-3c68a733-6fb8-48db-b7b8-32fd5b4639d3",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132138Z-offline-3e9098e3-d176-45cb-b93a-a57edd9073af",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132138Z-offline-44f91b8a-5e24-448d-ac85-c92a719cc8f4",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    },
+    {
+      "run_id": "20260926T132138Z-offline-48566222-5402-4656-9318-59add03f8b41",
+      "manifest_schema_version": 2,
+      "mode": "offline",
+      "status": "PASS",
+      "metrics_comparison": "MATCH",
+      "evaluator_compatibility": "MATCH"
+    }
+  ],
+  "new_live_runs": 0,
+  "new_manual_approvals": 0
+}

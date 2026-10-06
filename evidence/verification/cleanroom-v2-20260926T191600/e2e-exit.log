@@ -1,0 +1,4 @@
+COMMAND=node --use-env-proxy --env-file-if-exists=<existing user credential file> build/scripts/business.js e2e
+CWD=<tmp>\robotops-cleanroom-811c3b00fc844e3098d8d9b6d747aa5e
+CREDENTIAL_FILE_COPIED=false
+EXIT_CODE=0

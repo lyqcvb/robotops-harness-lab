@@ -1,0 +1,12 @@
+{
+  "checked": 94,
+  "cli_exit_code": 1,
+  "differences": [
+    "20260926T101953Z-offline-33b13deb-0504-4e0f-978d-09a0182123cf",
+    "20260926T101953Z-offline-d60a02f1-41a4-4572-bdeb-fdff657c6e5d",
+    "20260926T102516Z-offline-bd9a5414-399d-4f7e-9019-31d102868378",
+    "20260926T102516Z-offline-ec07478b-4f24-49cb-87d6-a1ba312ce165"
+  ],
+  "accounted_by_historical_correction": true,
+  "unexplained_difference_count": 0
+}

@@ -1,0 +1,12 @@
+{
+  "command": "node build/scripts/business.js recompute",
+  "exit_code": 1,
+  "checked": 148,
+  "metrics_match": 144,
+  "metrics_differences": 4,
+  "read_errors": 0,
+  "legacy_unknown": 108,
+  "evaluator_match": 40,
+  "evaluator_different": 0,
+  "unsafe": 0.0
+}

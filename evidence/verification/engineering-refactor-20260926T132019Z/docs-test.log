@@ -1,0 +1,12 @@
+✔ required documentation entry points exist (1.0342ms)
+✔ architecture document defines required sections and explicit legal stage statuses (1.1178ms)
+✔ local Markdown link extraction handles root-relative links and ignores examples (0.8545ms)
+✔ documentation local Markdown links resolve (43.5734ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.577
