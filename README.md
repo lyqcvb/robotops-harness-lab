@@ -193,6 +193,7 @@ npm run recompute -- --run results/20260926T115500Z-live-aca8486b-ca86-45ff-895d
 | `--approval` | enum | `scripted` | 仅 `npm run test:e2e` 接受；合法值为 `scripted`、`manual`、`none`。`manual` 需要真实交互 TTY。 |
 | `--offline` | boolean switch | `false`（缺省为 live） | 仅 `npm run eval` 接受；指定后切换为 offline 评测。其他命令不接受该通用开关。 |
 | `--run` | string（路径） | 未指定时遍历 `results/` 下非 `batches` 的 run 目录 | 仅 `npm run recompute` 接受；指定一个已有 run 目录做只读重算。 |
+| `--port` | number（1–65535） | `4317` | 仅 `npm run dashboard` 接受；`--port 4317` 与 `--port=4317` 均可。只绑定 `127.0.0.1`，不对外暴露。 |
 
 项目没有通用 `--help` 约定；选项只属于上表标注的对应命令。
 
@@ -315,9 +316,14 @@ run bundle 是判定结论的唯一依据，因此它必须能证明"没有被�
 
 表内为 2026-09-26 已保留记录，按工程重构、live scripted、manual 和 clean-room 等范围分类；各结论取自对应批次证据。
 
-**当前口径（2026-10-06）：** unit `352/352/0/0`；`npm run recompute` 复算 488 个 run，`114 MATCH / 374 DIFFERENT`、`unverified=478`，exit `1`；最新 live 评测批次为 2026-09-28 的 100-run 批次（`99 PASS / 1 FAIL`）；只读 Dashboard 已交付但无归档验证产物。表中 182/166/148 等数字均为各自历史轮次口径。
+**当前口径（2026-10-06，作者本机完整语料）：** unit `352/352/0/0`；`npm run recompute` 复算 528 个 run，`154 MATCH / 374 DIFFERENT`、`unverified=478`，exit `1`；最新 live 评测批次为 2026-09-28 的 100-run 批次（`99 PASS / 1 FAIL`）；只读 Dashboard 已交付但无归档验证产物。表中 182/166/148 等数字均为各自历史轮次口径。
 
-374 个 DIFFERENT 全部来自 evaluator 版本漂移（`differences[].reason` 以 `evaluator provenance differs` 开头），不是指标不一致：历史 run 由更早的 evaluator 闭包生成，而本轮的证据封存与判定修复又改动了 `src/eval/**`，因此它们只在当时那个 evaluator 版本下复现。**`recompute` 是复现检查，不是回归检查。** run 计数随每次 `test:integration`/`eval` 增长，故上述数字带日期。
+374 个 DIFFERENT 分两类，两类都必须分开陈述：
+
+- **370 个是 evaluator 版本漂移**（`differences[].reason` 以 `evaluator provenance differs` 开头）：run 由更早的 evaluator 闭包生成，而本轮的证据封存与判定修复改动了 `src/eval/**`，因此它们只在当时那个 evaluator 版本下复现。
+- **4 个是真实的存储指标不一致**（`stored and recomputed metrics differ`）：均为 2026-09-26 10:19–10:25 的 `sop_missing` run（schema v1）。其存储 verdict 为 `FAIL`（`scenario_initial_fault`、`scenario_expectation_mismatch`），而当前 evaluator 重算为 `PASS`——这正是 `docs/engineering-refactor.md` 记录的 evaluator v1 既有差异；原始记录保留、未改写。明细见 [recompute-all.json](evidence/verification/engineering-refactor-20260926T132019Z/recompute-all.json)。
+
+**`recompute` 是复现检查，不是回归检查。** 上述数字取自作者本机完整语料（含未入库的历史 run），会随每次 `test:integration`/`eval` 增长。全新克隆只含精选的 3 个 run 加上你自己生成的 run，`npm run recompute` 在这些数据上返回 `0`；`unverified` 计数说明它们未获封存认证，不等于"已验证"。
 
 | 日期 | 范围 | 已记录结论 | 原始证据 |
 |---|---|---|---|
