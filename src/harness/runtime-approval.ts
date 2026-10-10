@@ -100,7 +100,8 @@ export function createApprovalHandler({
 
     try {
       if (input.approval === undefined) {
-        input.ledger.decide(callId, 'cancelled', source);
+        // No channel means no decision source; cancel without attributing one.
+        input.ledger.cancel(callId, 'approval channel unavailable');
         recordDeniedApproval(pending, 'APPROVAL_UNAVAILABLE', 'no approval channel is available');
         input.trace.record('approval_unavailable', callId, { action: 'force_reboot' });
         input.boundary.stop('APPROVAL_UNAVAILABLE');

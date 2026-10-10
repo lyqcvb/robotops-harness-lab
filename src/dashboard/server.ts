@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import path from 'node:path';
 import process from 'node:process';
 
-import { redactValue } from '../trace/probe-evidence.js';
+import { redactValue } from '../trace/redaction.js';
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_EVENTS = 20_000;

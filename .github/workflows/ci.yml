@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '24.14.x'
 
       # 锁文件安装，跳过生命周期脚本；与文档记录的 clean-room 命令一致。
       - name: Install dependencies
@@ -41,3 +41,7 @@ jobs:
 
       - name: Offline evaluation
         run: npm run eval -- --offline
+
+      # 重算本次 CI 生成的全部 run；任何指标或证据摘要不一致都会失败。
+      - name: Recompute generated evidence
+        run: npm run recompute -- --all

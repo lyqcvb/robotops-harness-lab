@@ -840,3 +840,62 @@ for (const changedFile of [
     }
   });
 }
+
+test('default recompute scans only current-evaluator runs; --all checks every run strictly', async () => {
+  const projectRoot = await createMetadataProjectRoot();
+  try {
+    const options = {
+      projectRoot,
+      scenarioId: 'happy_path',
+      config: 'full',
+      mode: 'offline',
+      approvalMode: 'scripted',
+    } as const;
+    const current = await runBusiness(options);
+    const stale = await runBusiness(options);
+    const manifestPath = path.join(stale.directory, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as RunManifest & {
+      provenance: { evaluator: { version: string } };
+    };
+    manifest.provenance.evaluator.version = 'business-evaluator-v0';
+    await writeFile(manifestPath, JSON.stringify(manifest), 'utf8');
+
+    const recompute = async (argv: readonly string[]) => {
+      const output: string[] = [];
+      const code = await main(['recompute', ...argv], {
+        cwd: projectRoot,
+        env: { DEEPSEEK_API_KEY: '' },
+        stdout: (line) => { output.push(line); },
+        stderr: (line) => { output.push(line); },
+      });
+      return {
+        code,
+        summary: JSON.parse(output.at(-1)!) as {
+          readonly checked: number;
+          readonly skipped_other_evaluator: number;
+          readonly status: string;
+          readonly runs: readonly { readonly directory: string; readonly status: string }[];
+        },
+      };
+    };
+
+    const scoped = await recompute([]);
+    assert.equal(scoped.code, 0);
+    assert.equal(scoped.summary.status, 'PASS');
+    assert.equal(scoped.summary.checked, 1);
+    assert.equal(scoped.summary.skipped_other_evaluator, 1);
+    assert.deepEqual(scoped.summary.runs.map((run) => run.directory), [current.directory]);
+
+    const strict = await recompute(['--all']);
+    assert.equal(strict.code, 1);
+    assert.equal(strict.summary.status, 'FAIL');
+    assert.equal(strict.summary.checked, 2);
+    assert.equal(strict.summary.skipped_other_evaluator, 0);
+
+    const explicit = await recompute(['--run', stale.directory]);
+    assert.equal(explicit.code, 1);
+    assert.equal(explicit.summary.runs[0]?.status, 'DIFFERENT');
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});

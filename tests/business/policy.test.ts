@@ -373,6 +373,16 @@ test('serializes different concurrent calls and executes only the first', async 
   assert.equal(second.status, 'DENIED');
   assert.equal(second.error_code, 'CONCURRENT_CALL');
   assert.equal(harness.simulator.snapshot().counters.restart_navigation, 1);
+
+  // A concurrency rejection does not consume the call id, so the same call may retry.
+  const retried = await boundary.invoke(
+    'restart_navigation',
+    { robot_id: 'R-03' },
+    harness.context('call-concurrent-2'),
+  );
+  assert.equal(retried.status, 'RETRYABLE_FAILURE');
+  assert.equal(entered, 2);
+  assert.equal(harness.simulator.snapshot().counters.restart_navigation, 2);
 });
 
 test('default-denies force_reboot without an exact host authorizer', async () => {
@@ -550,6 +560,15 @@ test('bounds restart execution at two and force execution at one actual start', 
   assert.equal(secondRestart.status, 'RETRYABLE_FAILURE');
   assert.equal(thirdRestart.error_code, 'ACTION_BUDGET_EXHAUSTED');
   assert.equal(restartHarness.simulator.snapshot().counters.restart_navigation, 2);
+  // Over-limit is a call-level denial: the run is not stopped, so escalation stays possible.
+  assert.equal(restartHarness.boundary.stats().stopped, false);
+  const escalated = await restartHarness.boundary.invoke(
+    'force_reboot',
+    { robot_id: 'R-03' },
+    restartHarness.context('call-force-after-restarts'),
+  );
+  assert.equal(escalated.status, 'SUCCESS');
+  assert.equal(restartHarness.simulator.snapshot().counters.force_reboot, 1);
 
   const forceHarness = createHarness({
     fixture: DEFAULT_FIXTURE,

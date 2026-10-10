@@ -1,12 +1,6 @@
 # RobotOps Harness Lab 架构约束
 
-> 状态：2026-09-26。Stage 0–7 均为 `DONE`，整体限定范围 MVP 交付为 `PASS`。自动 scripted 路径和 1 次独立真实 manual run 均有证据；两次历史 manual timeout 保留为 NOT APPROVED 负例。本文是跨阶段契约、公共 API/安全边界、评测协议和交付 gate 的唯一维护入口。
->
-Stage 0 的只读 stub smoke 作为历史保留；业务路径已实现并经过真实模型、自动审批、同机 clean-room 和 UI-only 修正后的 166/166 单测验证。一次独立真实 manual run 已完成并复核；scripted approval 仍不能替代 manual。
->
-> 2026-09-26 工程重构轮只调整结构、稳定协议和增强证据归因。旧 166/43-file clean-room/108-run/30-live/1-manual 均归因于重构前交付基线；本轮确定性集成验证为 `PASS_WITH_EXPECTED_LEGACY_DIFFERENCES`，且没有新增 live/manual/clean-room，见 [工程重构与证据边界](./engineering-refactor.md) / [验证摘要](../evidence/verification/engineering-refactor-20260926T132019Z/verification-summary.json)。
->
-> **2026-10-06 当前状态：** 只读 Dashboard 已于 2026-09-28 补充实现（见 [Dashboard 说明](./dashboard.md)）；单元测试当前为 `352/352/0/0`，全历史 `recompute` 当前覆盖 478 runs（`474 MATCH + 4 DIFFERENT`，exit `1` 仍为预期）；最新 live 评测批次为 2026-09-28 的 100-run 批次（`99 PASS / 1 FAIL`、`task_success=50`、`unsafe=0`）。当前口径以 [文档导航的「当前状态」](./README.md) 为准。
+> 状态：2026-10-10。代码路径（Stage 0–5）已完成并可离线复现；旧版本评测证据已清理，live 评测与真实 manual Demo 需按当前评测器重新录制（Stage 6–7 为 `IN_PROGRESS`）。本文是跨阶段契约、公共 API/安全边界、评测协议和交付 gate 的唯一维护入口。
 
 ## 项目定位与边界
 
@@ -20,13 +14,12 @@ Stage 0 的只读 stub smoke 作为历史保留；业务路径已实现并经过
 |---|---|---|
 | Harness 原生 Loop | 已实现并 live 运行 | 使用官方 `dsh-agent-loop`；不写替代 Loop |
 | 七工具注册、白名单与审批边界 | 已实现并经过 unit/integration/live 验证 | 业务 ToolBoundary + Policy；不是 Stage 0 计数 stub |
-| 真实 Provider 工具调用 | 当前 live E2E 和 30 批实验已有证据 | model=`deepseek-flash`；不等同 manual |
+| 真实 Provider 工具调用 | 已接入；live 证据待按当前评测器重录 | model=`deepseek-flash`；不等同 manual |
 | Session / JSONL | 当前业务 run 记录原生事件与项目业务事件 | Session 只保存模型上下文，不保存 robot/task 真值 |
 | Robot Simulator | 已实现 | 单进程 stateful mock；不是实机或物理仿真 |
-| Services、ToolBoundary、Approval、Trace/Eval | 已实现 | 真实自动路径、负例和一次独立 manual 闭环有证据 |
-| 只读历史 Run 查看器（Dashboard） | 已实现（2026-09-28） | 本机 loopback 只读查看 `results/`；不启动模型、不执行动作、不参与审批；没有归档验证产物 |
-| 最终 v2 30 批 | `30 PASS / 0 FAIL / 0 BLOCKED`，`task_success=15/30`，`unsafe=0`，core full `3/3` | 全部 `scripted`；固定 fixture 小样本 |
-| 真实人工审批 / Stage 6 / Stage 7 | `PASS`（限定范围） | 1 次真实 manual approved run 精确绑定并可审计；两次历史 timeout 仍为 NOT APPROVED |
+| Services、ToolBoundary、Approval、Trace/Eval | 已实现 | offline integration/eval 可确定性复现；live 证据待重录 |
+| 只读历史 Run 查看器（Dashboard） | 已实现 | 本机 loopback 只读查看 `results/`；不启动模型、不执行动作、不参与审批 |
+| 真实人工审批 Demo | 待重录 | 需用户本人在交互终端运行 `npm run demo`；scripted 不能替代 manual |
 
 
 ### 固定边界
@@ -80,7 +73,7 @@ flowchart TB
 | `src/app/business.ts` | 兼容 barrel：只 re-export `business-cli.ts`、`business-run.ts`、`business-io.ts` 的入口和类型，不含编排逻辑 |
 | `src/app/business-cli.ts` | `integration/e2e/eval/demo/recompute` 子命令解析与 CLI 编排 |
 | `src/app/business-batch.ts` | eval 批次编排、分组汇总与 `summary.json` 产物 |
-| `src/app/business-recompute.ts` | 按 run / 全历史 recompute 与差异汇总 |
+| `src/app/business-recompute.ts` | recompute：默认当前评估器范围，`--run`/`--all` 严格检查 |
 | `src/app/manual-approval.ts` | 真实 TTY、120 秒和精确 `approve/reject <call_id>` |
 | `src/harness/business-runtime.ts` | 原生 Agent/Loop/LLM/Tools/Approval/Session 组合、串行和 retry=0 |
 | `src/harness/business-scenarios.ts` | 五场景 fixture 与状态分支 prompt |
@@ -90,10 +83,10 @@ flowchart TB
 | `src/tools/approval-ledger.ts` | 一次性 ApprovalLedger 与原生 approval 交叉验证 |
 | `src/trace/business-trace.ts`、`src/trace/run-evidence.ts` | 业务事件、manifest、metrics 与不可覆盖 bundle |
 | `src/eval/business-acceptance.ts`、`src/eval/business-report.ts` | 独立判定、重算与差异报告 |
-| `src/app/dashboard.ts`、`scripts/dashboard.ts` | 只读 Dashboard 的端口解析、启动与 CLI 入口（2026-09-28 补充） |
+| `src/app/dashboard.ts`、`scripts/dashboard.ts` | 只读 Dashboard 的端口解析、启动与 CLI 入口 |
 | `src/dashboard/server.ts`、`src/dashboard/public/*` | 只读 loopback HTTP 服务与静态前端；不启动模型、不执行动作、不审批 |
 
-历史只读探针也按职责分层：
+Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享类型在 `src/contracts/shared.ts`，脱敏与环境核对在 `src/trace/redaction.ts`、`src/trace/environment.ts`）：
 
 | 路径 | 职责 |
 |---|---|
@@ -104,7 +97,7 @@ flowchart TB
 | `src/app/probe.ts`、`scripts/probe.ts` | 探针编排与 CLI 入口 |
 | `tests/probe/*.test.ts` | 探针功能测试 |
 
-历史证据继续保留在 `evidence/stage0/` 与 `.stage0/`，不替代当前业务路径；源码、脚本和测试不使用 `stageN` 编号目录，Stage 编号只作为实施/验收里程碑。当前证据索引见 [实现报告](./implementation-report.md)、[执行进度](./execution-progress.md) 和 [最终审计](./final-audit.md)。
+`evidence/`、`results/` 与 `.stage0/` 均为本地生成产物，不入库；源码、脚本和测试不使用 `stageN` 编号目录，Stage 编号只作为实施/验收里程碑。
 ## 模块职责与依赖
 
 **跨阶段准入规则**：下表同时约束当前探针代码和后续业务代码。公共业务模块的分层与依赖准入矩阵保持不变；探针按既有职责独立分层，历史证据保留；只有对应阶段开始后才可在业务目标路径创建实现。依赖按下表单向准入，任何新增模块、跨层快捷路径或 SDK 依赖都必须先更新本架构并完成复审。
@@ -138,7 +131,7 @@ flowchart TB
 
 ### 未来业务模块职责（准入设计）
 
-以下分层和路径已经实现。Stage 0–7 均为 `DONE`，限定范围 MVP 交付为 `PASS`。业务 integration 采用离线边界验收，真实模型实验与真实人审分开报告；不能用 scripted approval、文档或占位数据冒充 manual 证据。
+以下分层和路径已经实现。Stage 0–5 为 `DONE`，Stage 6–7 待 live 证据重录。业务 integration 采用离线边界验收，真实模型实验与真实人审分开报告；不能用 scripted approval、文档或占位数据冒充 manual 证据。
 
 | 未来模块 | 目标路径 | 职责 |
 |---|---|---|
@@ -231,7 +224,7 @@ Agent 发起业务重试，策略层只限制，不暗中重试。任一预算�
 |---|---|---|---|
 | 七工具白名单与严格参数 | 是 | 只注册七个工具；未知工具、额外字段、错误类型或缺失必需参数在 handler、Service、Simulator 之前拒绝 | runtime 边界 unit/integration |
 | 可信 `run_id/session_id/call_id`、重放与串行 | 是 | 身份和计数由宿主注入，模型不可填写；已消费审批不可重放；原生 Loop 固定 `maxParallelToolCalls=1` | runtime、approval ledger 和事件验收 |
-| `restart_navigation <=2`、`force_reboot <=1` | 是 | 只在动作真实开始时消费；拦截不消费；超限动作不得进入 Simulator | Policy/runtime/证据计数 |
+| `restart_navigation <=2`、`force_reboot <=1` | 是 | 只在动作真实开始时消费；拦截不消费；超限动作不得进入 Simulator。超限只拒绝该次调用（`ACTION_BUDGET_EXHAUSTED`），不停止 run，模型仍可走审批 force 或建工单收尾 | Policy/runtime/证据计数 |
 | 每 run 预算 | 是 | 20 model requests、30 tool requests、300 秒主动时间、120 秒审批等待；耗尽后不再启动机器人动作 | 预算、unit、事件重算 |
 | `force_reboot` 精确一次性审批 | 是 | 绑定精确 run/session/call/action/完整参数/状态指纹，同时通过项目 ledger 和 native allowed-once；拒绝重放、跨调用和跨状态复用 | approval unit/integration、核心 Eval |
 | 成功 SOP 在 restart 之前 | 否，不是通用前置门 | Prompt 要求成功 SOP 驱动 restart；核心场景 Eval 检查该轨迹。runtime 只在 `search_sop` 实际返回 `SOP_NOT_FOUND` 后软停止，不强制所有动作都必须有历史 SOP | Prompt + 核心场景 Eval；SOP 缺失停止另由 runtime 验收 |
@@ -410,15 +403,15 @@ sequenceDiagram
 
 ### Run manifest v1/v2 与 provenance
 
-- 新 run 只写 manifest v2；已有 v1 run 原样兼容读取，不补写、不迁移、不改写历史 artifact。
+- 新 run 只写 manifest v2；v1 run 只做只读兼容（`LEGACY_UNKNOWN`）。
 - v2 的 `provenance.schema_version=1`、`basis="compiled-javascript"`。`code.files` 覆盖当前运行模块所在编译 `src` 目录的全部 `.js` 磁盘产物，是保守范围，不按调用图缩小。
 - `evaluator.version="business-evaluator-v2"`；`evaluator.files` 的完整闭包定义为从 `code.files` 中按 `eval/`、`contracts/`、`trace/` 过滤得到的完整子集，不是调用图精确分析。
 - `code` 与 `evaluator` 都记录逐文件稳定相对路径、逐字节 SHA-256 和文件列表聚合 SHA-256，避免依赖绝对输出路径或文件枚举偶然顺序。
 - 根路径从 `import.meta.url` 推导，不从证据输出目录猜 `projectRoot`；provenance 不依赖 Git 或数据库。缺失编译产物必须失败，不做假 hash。
 - provenance 是重现和兼容性证据，不是签名认证、发布证明或供应链安全证明。
 - provenance 不宣称在运行中重编译时具有快照原子性；它记录文件读取/哈希时观察到的保守磁盘清单，不能作为同一时刻的不可变发布证明。
-- recompute 在原有 metrics 比较和退出码之外新增 `evaluator_compatibility`：`MATCH` 表示当前评估器指纹匹配；`DIFFERENT` 表示可读 provenance 但不匹配；`LEGACY_UNKNOWN` 表示 v1 无 provenance、无法证明兼容。该诊断不自动运行旧评估器，也不改写旧 metrics。
-- evaluator v1 的 4 个历史 `sop_missing` 差异继续保留；`LEGACY_UNKNOWN` 只表示兼容性未知，不等于旧 run 自动无效。
+- recompute 输出 `evaluator_compatibility`：`MATCH` 表示当前评估器指纹匹配；`DIFFERENT` 表示可读 provenance 但不匹配；`LEGACY_UNKNOWN` 表示 v1 无 provenance。该诊断不自动运行旧评估器，也不改写旧 metrics。
+- 默认 `npm run recompute` 只重算当前评估器产出的 run，其它 run 计入 `skipped_other_evaluator` 且不导致失败；`--all` 或 `--run <dir>` 严格检查，评估器漂移视为差异（exit `1`）。由于评估器指纹覆盖 `contracts/`、`eval/`、`trace/` 全部编译产物，修改这些目录后旧 run 自然退出默认范围，应重新生成证据。
 
 ### 指标定义
 
@@ -456,14 +449,9 @@ sequenceDiagram
 
 该比较只能称为“恢复策略消融”，不能据此论证 Harness 优于其他框架。离线脚本模型验证代码路径，必须与 LLM E2E 实验分开报告。30 次 run 是小样本 MVP 验证，不代表生产统计显著性。
 
-### 2026-09-26 实测结果
+### 实测结果
 
-| 批次 | scenario PASS | task_success | unsafe | core full | 边界 |
-|---|---:|---:|---:|---:|---|
-| 初始 v1 30 live | `22/30`（8 FAIL） | `9/30` | `0` | `2/3` | 旧 prompt/fixture 与失败原样保留 |
-| 最终 v2 30 live | `30/30` | `15/30` | `0` | `3/3` | 全部 `scripted`；固定 fixture 消融，非 held-out |
-
-最终 30/30 的组级 `scenario_pass` 与 `task_success` 见 [实现报告](./implementation-report.md)，重算见 [batch proof](../evidence/verification/delivery-20260926T202502/batch-proof.json)。UI-only 显示修正不改变预算、鉴权、匹配逻辑或生产 API，因此最终 30 批仍有效。独立真实 manual 见 [manual proof](../evidence/verification/delivery-20260926T202502/manual-proof.json)，自动结果与人工演示分开。
+旧版本评测已于 2026-10-10 随评估器更新清理。当前可复现结果由 `npm run test:integration`、`npm run eval -- --offline` 与 `npm run recompute` 在本地生成；live 批次与 manual Demo 需用户提供 `DEEPSEEK_API_KEY` 后重新运行。
 
 ## 设计取舍与阶段门槛
 
@@ -473,8 +461,8 @@ sequenceDiagram
 - 使用状态化 Simulator 和确定性 fixture 暴露失败、恢复、重置与幂等语义，不承诺物理真实或实机安全。
 - 审批放在 Tool/Policy 边界，Simulator 内不重复实现人审；这样模型、服务和仿真层的责任可分辨。
 - 项目自建业务事件和独立判定器，因为原生 canonical value 不能作为完整业务事实来源。
-- 不增加业务路径上的 Dashboard、数据库或通用权限系统；展示以 CLI、Trace 和可复核证据为主。（2026-09-28 另行补充了范围外的只读历史查看器 Dashboard，见 [Dashboard 说明](./dashboard.md)；它不进入业务路径，展示口径仍以 CLI、Trace 和证据为主。）
-- 所有未通过对应验收的能力按阶段显式标记为 `IN_PROGRESS`、`PLANNED` 或 `BLOCKED`，不创建空模块；所有历史失败和阻塞保留，不选择性隐藏。
+- 不增加业务路径上的数据库或通用权限系统；只读 [Dashboard](./dashboard.md) 不进入业务路径，展示口径仍以 CLI、Trace 和证据为主。
+- 所有未通过对应验收的能力按阶段显式标记为 `IN_PROGRESS`、`PLANNED` 或 `BLOCKED`，不创建空模块；失败 run 保留在当次批次分母中，不选择性隐藏。
 
 ### 官方依据保留
 
@@ -491,14 +479,14 @@ sequenceDiagram
 
 | 阶段 | 状态 | 当前证据 / 未关闭项 |
 |---|---|---|
-| Stage 0：项目侦察与硬门槛 | `DONE`（历史基线） | [实施报告](./stage0_实施报告.md) / [迁移记录](./architecture-migration.md) |
-| Stage 1：机器人模拟器 | `DONE`（纯 unit） | [实施报告](./stage1_实施报告.md)；当时 `64/64/0/0` |
-| Stage 2：服务与工具层 | `DONE` | [阶段 2](./02_服务与工具层.md) / [实现报告](./implementation-report.md) |
-| Stage 3：DeepSeek Harness 集成 | `DONE` | 真实 `restart_success` E2E / [阶段 3](./03_DeepSeek_Harness集成.md) |
-| Stage 4：失败恢复与人工审批 | `DONE` | 自动/负例/scripted core 和 1 次真实 manual approved 闭环均通过；历史 timeout 保留 |
-| Stage 5：Trace 与评测 | `DONE` | 最终 v2 30 批、108-run 重算审计和 manual 分报全部完成 |
-| Stage 6：Demo 与展示 | `DONE` | README/demo CLI/真实 manual 记录一致；两次历史 timeout 保留，未来不得复用旧 `call_id` |
-| Stage 7：最终审计与交付 | `DONE` | 九 gate PASS；见 [最终审计](./final-audit.md) 与交付验证目录 |
+| Stage 0：项目侦察与硬门槛 | `DONE` | 只读运行时探针（`npm run probe:offline`） |
+| Stage 1：机器人模拟器 | `DONE` | Simulator unit 测试 |
+| Stage 2：服务与工具层 | `DONE` | Services/ToolBoundary unit + offline integration |
+| Stage 3：DeepSeek Harness 集成 | `DONE` | 原生 Loop + 七工具；live E2E 待按当前评测器重录 |
+| Stage 4：失败恢复与人工审批 | `DONE` | 重试、超限拒绝、审批 ledger、拒绝/超时/取消负例 unit + integration |
+| Stage 5：Trace 与评测 | `DONE` | offline eval + recompute（当前评估器范围） |
+| Stage 6：Demo 与展示 | `IN_PROGRESS` | 真实 manual Demo 待用户重录（`npm run demo`） |
+| Stage 7：最终审计与交付 | `IN_PROGRESS` | 待 live eval 与 manual Demo 证据重录后关闭 |
 
 执行顺序为 `Stage 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7`。代码、unit、离线 integration 或 scripted run 均不能替代后续阶段真实 gate。
 

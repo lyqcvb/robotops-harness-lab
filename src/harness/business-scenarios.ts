@@ -1,6 +1,6 @@
 import type { FailureSequences, SimulatorFixture } from '../contracts/business.js';
 import type { RecoveryMode, ScenarioId } from '../contracts/run.js';
-import type { ScriptedToolCall, ScriptedTurn } from '../contracts/probe.js';
+import type { ScriptedToolCall, ScriptedTurn } from '../contracts/shared.js';
 
 const ROBOT_ID = 'R-03';
 const TASK_ID = 'TASK-502';

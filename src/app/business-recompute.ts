@@ -10,7 +10,7 @@ import {
   compareEvaluatorProvenance,
   type EvaluatorProvenanceComparison,
 } from '../trace/run-provenance.js';
-import { safeError } from '../trace/probe-evidence.js';
+import { safeError } from '../trace/redaction.js';
 import {
   emitJson,
   redactionSecrets,
@@ -21,6 +21,11 @@ import {
 
 interface RecomputeSummary {
   readonly checked: number;
+  /**
+   * Scanned runs left out of the default scan because a different (or unknown)
+   * evaluator revision produced them. Always 0 with `--all` or `--run`.
+   */
+  readonly skipped_other_evaluator: number;
   /**
    * Runs carrying no recorded evaluator provenance (schema v1). Their metrics can
    * still be reproduced, but the evaluator revision that produced them is unknown,
@@ -59,8 +64,14 @@ async function scanRunDirectories(projectRoot: string): Promise<readonly string[
 
 export async function runRecompute(io: BusinessCliIO, argv: readonly string[]): Promise<number> {
   let requestedRun: string | undefined;
+  let includeAll = false;
   for (let index = 0; index < argv.length; index += 1) {
     const option = argv[index]!;
+    if (option === '--all') {
+      if (includeAll) return writeFailure(io, 'duplicate option: --all');
+      includeAll = true;
+      continue;
+    }
     if (option !== '--run') return writeFailure(io, `unknown recompute option: ${option}`);
     if (requestedRun !== undefined) return writeFailure(io, 'duplicate option: --run');
     const parsed = valueAfter(argv, index, option);
@@ -69,7 +80,15 @@ export async function runRecompute(io: BusinessCliIO, argv: readonly string[]): 
     index = parsed.nextIndex;
   }
 
+  if (includeAll && requestedRun !== undefined) {
+    return writeFailure(io, '--all and --run cannot be combined');
+  }
+
   const projectRoot = path.resolve(io.cwd);
+  // The default scan reproduces only runs from the current evaluator revision;
+  // an explicit --run or --all checks strictly, so evaluator drift still fails.
+  const currentEvaluatorOnly = requestedRun === undefined && !includeAll;
+  let skippedOtherEvaluator = 0;
   let directories: readonly string[];
   if (requestedRun !== undefined) {
     const resolved = path.resolve(io.cwd, requestedRun);
@@ -101,6 +120,10 @@ export async function runRecompute(io: BusinessCliIO, argv: readonly string[]): 
         evidence.manifest,
         await currentProvenance,
       );
+      if (currentEvaluatorOnly && evaluatorCompatibility.status !== 'MATCH') {
+        skippedOtherEvaluator += 1;
+        continue;
+      }
       recomputed = evaluateRun(evidence);
       const stored = await readRunBundle(directory);
       const metricsMatch = canonicalJson(stored.metrics) === canonicalJson(recomputed);
@@ -147,7 +170,8 @@ export async function runRecompute(io: BusinessCliIO, argv: readonly string[]): 
   }
 
   const summary: RecomputeSummary = {
-    checked: directories.length,
+    checked: runs.length,
+    skipped_other_evaluator: skippedOtherEvaluator,
     // A run is "unverified" when it carries no sealed evidence digest, or when the
     // evaluator revision that produced it is unknown. Such runs can still be
     // reproduced, but they are not attested, so they are counted rather than

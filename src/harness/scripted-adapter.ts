@@ -7,7 +7,7 @@ import {
   type StreamChunk,
 } from '@deepseek-ai/dsh-llm';
 
-import type { ScriptedTurn } from '../contracts/probe.js';
+import type { ScriptedTurn } from '../contracts/shared.js';
 function abortedFinish(): StreamChunk {
   return {
     type: 'finish',

@@ -14,7 +14,7 @@ import { createManualApproval } from '../../src/app/manual-approval.js';
 import { TOOL_NAMES } from '../../src/contracts/business.js';
 import type { ToolResult } from '../../src/contracts/business.js';
 import { SCENARIO_IDS, type RecoveryMode, type ScenarioId } from '../../src/contracts/run.js';
-import type { ScriptedTurn } from '../../src/contracts/probe.js';
+import type { ScriptedTurn } from '../../src/contracts/shared.js';
 import {
   executeBusinessRuntime,
   nativeApprovalGranted,

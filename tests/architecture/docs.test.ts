@@ -20,27 +20,9 @@ const legalStageStatuses = ['PLANNED', 'IN_PROGRESS', 'DONE', 'BLOCKED'] as cons
 /**
  * `evidence/` and `results/` hold artifacts this project generates itself
  * (`npm run eval`, `npm run test:integration`, `npm run probe:*`, `npm run demo`).
- * Only a curated subset is committed, so a fresh clone legitimately lacks most of
- * them. Links into these trees are therefore allowed to be absent, but every link
- * that is present must still resolve, and the curated artifacts the README relies
- * on must always exist (see the dedicated test below).
+ * They are never committed, so links into these trees may legitimately be absent.
  */
 const GENERATED_ARTIFACT_ROOTS = ['evidence/', 'results/'] as const;
-
-const REQUIRED_ARTIFACT_LINKS = [
-  'evidence/verification/cleanroom-ui-20260926T195348',
-  'evidence/verification/cleanroom-v2-20260926T191600',
-  'evidence/verification/delivery-20260926T202502/batch-proof.json',
-  'evidence/verification/delivery-20260926T202502/manual-proof.json',
-  'evidence/verification/engineering-refactor-20260926T132019Z/recompute-all.json',
-  'evidence/verification/engineering-refactor-20260926T132019Z/recompute-summary.json',
-  'evidence/verification/engineering-refactor-20260926T132019Z/verification-summary.json',
-  'results/20260926T113332Z-live-fdc66b4b-a180-4e69-aeac-db445be1f10e',
-  'results/20260926T113810Z-live-33a55aaa-7569-441a-a420-ca4e9b3f0cbc',
-  'results/20260926T115500Z-live-aca8486b-ca86-45ff-895d-2650679d880d',
-  'results/batches/20260926T105135Z-eval-batch-e29948a1-8f29-489d-9b7d-53d28eeb2f75/summary.json',
-  'results/batches/20260926T111248Z-eval-batch-aadff914-5f47-4708-b095-ac156885b351/summary.json',
-] as const;
 
 function isGeneratedArtifact(projectRelativePath: string): boolean {
   const normalized = projectRelativePath.replace(/\\/g, '/').replace(/^\.\//, '');
@@ -139,15 +121,9 @@ test('documentation local Markdown links resolve', () => {
   }
 });
 
-test('curated evidence artifacts referenced by the documentation are committed', () => {
-  // These are the artifacts the README cites as raw evidence. Unlike the rest of
-  // evidence/ and results/, they must be present in a fresh clone, otherwise the
-  // README's central claims are unbacked.
-  for (const link of REQUIRED_ARTIFACT_LINKS) {
-    assert.equal(
-      existsSync(path.join(projectRoot, link)),
-      true,
-      `curated evidence artifact is missing: ${link}`,
-    );
+test('generated run artifacts are not committed', () => {
+  const ignore = readFileSync(path.join(projectRoot, '.gitignore'), 'utf8').split(/\r?\n/);
+  for (const root of GENERATED_ARTIFACT_ROOTS) {
+    assert.ok(ignore.includes(root), `.gitignore must ignore ${root}`);
   }
 });

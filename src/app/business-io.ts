@@ -1,7 +1,7 @@
 import process from 'node:process';
 
 import type { BusinessMetrics } from '../contracts/run.js';
-import { redactValue, safeError } from '../trace/probe-evidence.js';
+import { redactValue, safeError } from '../trace/redaction.js';
 
 export interface BusinessCliIO {
   stdout(line: string): void;
@@ -27,7 +27,7 @@ export const USAGE = [
   '  e2e [--scenario <scenario>] [--config full|fail-fast] [--approval scripted|manual|none]',
   '  eval [--offline]',
   '  demo',
-  '  recompute [--run <run-directory>]',
+  '  recompute [--run <run-directory> | --all]',
 ].join('\n');
 
 const SECRET_ENV_KEY = /(^|_)(api_?key|authorization|bearer|password|secret|token)($|_)/i;

@@ -1,2 +1,0 @@
-COMMAND=npm run test:integration
-EXIT_CODE=0

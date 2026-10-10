@@ -1,21 +1,8 @@
 import type { GateStatus } from './probe-evidence.js';
 
-export interface SafeError {
-  readonly type: string;
-  readonly name: string;
-  readonly code: string | null;
-  readonly message: string;
-}
+import type { SafeError, ScriptedTurn } from './shared.js';
 
-export interface ScriptedToolCall {
-  readonly id: string;
-  readonly name: string;
-  readonly arguments: Readonly<Record<string, unknown>>;
-}
-
-export type ScriptedTurn =
-  | { readonly kind: 'tool-calls'; readonly calls: readonly ScriptedToolCall[] }
-  | { readonly kind: 'text'; readonly text: string };
+export type { SafeError, ScriptedToolCall, ScriptedTurn } from './shared.js';
 
 export type ProbeApprovalMode = 'unavailable' | 'rejected' | 'approve-once' | 'cancelled' | 'expire';
 export type ProbePolicyFixture = 'default' | 'allow-force';

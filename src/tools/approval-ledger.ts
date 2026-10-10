@@ -248,17 +248,21 @@ export class ApprovalLedger {
     });
     return true;
   }
+  /** Cancels one pending or approved grant without attributing a decision source. */
+  cancel(callId: string, reason: string): boolean {
+    const record = this.#recordForCall(callId);
+    if (record === null || (record.status !== 'pending' && record.status !== 'approved')) {
+      return false;
+    }
+    this.#cancelRecord(record, reason, this.#readNow());
+    return true;
+  }
+
   cancelAll(reason: string): void {
     const atMs = this.#readNow();
     for (const record of this.#records) {
       if (record.status !== 'pending' && record.status !== 'approved') continue;
-      record.status = 'cancelled';
-      record.decided_at_ms = atMs;
-      record.reason = reason;
-      this.#trace.record('approval_cancelled', record.binding.call_id, {
-        binding: cloneBinding(record.binding),
-        reason,
-      });
+      this.#cancelRecord(record, reason, atMs);
     }
   }
 
@@ -295,6 +299,16 @@ export class ApprovalLedger {
         record.binding.precondition_hash === fingerprint,
     );
     return candidates.length === 1 ? (candidates[0] ?? null) : null;
+  }
+
+  #cancelRecord(record: MutableApprovalLedgerRecord, reason: string, atMs: number): void {
+    record.status = 'cancelled';
+    record.decided_at_ms = atMs;
+    record.reason = reason;
+    this.#trace.record('approval_cancelled', record.binding.call_id, {
+      binding: cloneBinding(record.binding),
+      reason,
+    });
   }
 
   #terminateGrant(

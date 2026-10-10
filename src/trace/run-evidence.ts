@@ -9,7 +9,7 @@ import type {
   BusinessMetrics,
   RunManifest,
 } from '../contracts/run.js';
-import { redactValue } from './probe-evidence.js';
+import { redactValue } from './redaction.js';
 
 export interface RunEvidence {
   readonly manifest: RunManifest;

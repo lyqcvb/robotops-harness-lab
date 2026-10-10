@@ -276,3 +276,19 @@ test('rejects decisions for unknown calls and cannot approve expired records', (
   assert.equal(eventsOfType(trace, 'approval_invalid').length, 1);
   assert.equal(eventsOfType(trace, 'approval_expired').length, 1);
 });
+test('cancels a single call without attributing a source or recording an invalid event', () => {
+  const trace = new BusinessTrace({ runId: 'run-cancel-one', now: () => 0 });
+  const ledger = new ApprovalLedger({ runId: 'run-cancel-one', trace, now: () => 0 });
+  const ctx = context('run-cancel-one', null, 'call-unavailable');
+  assert.ok(ledger.request(ctx, ARGS, HASH));
+
+  assert.equal(ledger.cancel(ctx.call_id, 'approval channel unavailable'), true);
+  assert.equal(ledger.cancel(ctx.call_id, 'again'), false);
+  assert.equal(ledger.records()[0]?.status, 'cancelled');
+  assert.equal(ledger.records()[0]?.source, null);
+  assert.equal(eventsOfType(trace, 'approval_invalid').length, 0);
+  assert.deepEqual(
+    eventsOfType(trace, 'approval_cancelled').map((event) => event.data.reason),
+    ['approval channel unavailable'],
+  );
+});

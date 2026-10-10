@@ -192,7 +192,8 @@ export class ToolBoundary {
       name === 'restart_navigation' &&
       snapshot.counters.restart_navigation >= ACTION_LIMITS.restart_navigation
     ) {
-      this.stop('ACTION_BUDGET_EXHAUSTED');
+      // Denies only this call: the run stays alive so the model can still escalate
+      // to an approved force_reboot or close out with a maintenance ticket.
       return failure(
         'DENIED',
         'ACTION_BUDGET_EXHAUSTED',
@@ -204,7 +205,6 @@ export class ToolBoundary {
       name === 'force_reboot' &&
       snapshot.counters.force_reboot >= ACTION_LIMITS.force_reboot
     ) {
-      this.stop('ACTION_BUDGET_EXHAUSTED');
       return failure(
         'DENIED',
         'ACTION_BUDGET_EXHAUSTED',
@@ -229,17 +229,16 @@ export class ToolBoundary {
     if (options?.observed !== true) this.noteRequest(name, args, ctx);
 
     const ctxCallId = callIdOf(ctx);
-    if (ctxCallId !== null) {
-      if (this.#seenCalls.has(ctxCallId)) {
-        return this.#recordResult(
-          name,
-          ctx,
-          failure('DENIED', 'CALL_REPLAY', `call ${ctxCallId} has already been used`),
-        );
-      }
-      this.#seenCalls.add(ctxCallId);
+    if (ctxCallId !== null && this.#seenCalls.has(ctxCallId)) {
+      return this.#recordResult(
+        name,
+        ctx,
+        failure('DENIED', 'CALL_REPLAY', `call ${ctxCallId} has already been used`),
+      );
     }
 
+    // Checked before the call id is consumed, so a call rejected only for
+    // concurrency can be retried under the same id.
     if (this.#busy) {
       return this.#recordResult(
         name,
@@ -247,6 +246,7 @@ export class ToolBoundary {
         failure('DENIED', 'CONCURRENT_CALL', 'another tool call is already in progress'),
       );
     }
+    if (ctxCallId !== null) this.#seenCalls.add(ctxCallId);
 
     this.#busy = true;
     let result: ToolResult;

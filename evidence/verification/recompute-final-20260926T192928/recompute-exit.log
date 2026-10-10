@@ -1,3 +1,0 @@
-COMMAND=npm run recompute
-EXIT_CODE=1
-NOTE=Historical evaluator-v1 differences must be checked against the retained correction report

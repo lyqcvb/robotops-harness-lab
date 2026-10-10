@@ -89,7 +89,7 @@ test('default recompute with only hidden directories checks zero runs without er
   }
   const { code, summary } = await recompute(root);
   assert.equal(code, 0);
-  assert.deepEqual(summary, { checked: 0, unverified: 0, differences: [], runs: [], status: 'PASS' });
+  assert.deepEqual(summary, { checked: 0, skipped_other_evaluator: 0, unverified: 0, differences: [], runs: [], status: 'PASS' });
 });
 
 test('explicit --run still checks a hidden directory rather than silently skipping it', async (t) => {

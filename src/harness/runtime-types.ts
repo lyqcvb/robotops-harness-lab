@@ -1,5 +1,5 @@
 import type { ScenarioId } from '../contracts/run.js';
-import type { ScriptedTurn } from '../contracts/probe.js';
+import type { ScriptedTurn } from '../contracts/shared.js';
 import type { ApprovalLedger } from '../tools/approval-ledger.js';
 import type { ToolBoundary } from '../tools/tool-boundary.js';
 import type { BusinessTrace } from '../trace/business-trace.js';

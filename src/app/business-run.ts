@@ -32,12 +32,8 @@ import {
   writeRunBundle,
 } from '../trace/run-evidence.js';
 import { collectRunProvenance } from '../trace/run-provenance.js';
-import {
-  readInstalledVersions,
-  readLockfileDigest,
-  redactValue,
-  safeError,
-} from '../trace/probe-evidence.js';
+import { readInstalledVersions, readLockfileDigest } from '../trace/environment.js';
+import { redactValue, safeError } from '../trace/redaction.js';
 import { redactionSecrets } from './business-io.js';
 import {
   createManualApproval,

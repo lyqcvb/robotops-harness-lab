@@ -8,7 +8,7 @@ import type {
 } from '../contracts/run.js';
 import { SCENARIO_IDS } from '../contracts/run.js';
 import { createRunId } from '../trace/run-evidence.js';
-import { safeError } from '../trace/probe-evidence.js';
+import { safeError } from '../trace/redaction.js';
 import {
   aggregateExitCode,
   emitError,
