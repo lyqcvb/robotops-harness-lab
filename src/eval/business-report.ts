@@ -5,8 +5,6 @@ import type {
   RecoveryMode,
 } from '../contracts/run.js';
 import { SCENARIO_IDS } from '../contracts/run.js';
-import { evaluateRun } from './business-acceptance.js';
-import { readRunEvidence } from '../trace/run-evidence.js';
 
 export interface RunSummaryInput {
   readonly manifest: RunManifest;
@@ -24,13 +22,13 @@ export interface SummaryBucket {
 }
 
 export interface ModeSummary extends SummaryBucket {
-  readonly mode: 'offline' | 'live';
+  readonly mode: 'live';
   readonly complete: boolean;
   readonly missing: number;
 }
 
 export interface ScenarioArmSummary extends SummaryBucket {
-  readonly mode: 'offline' | 'live';
+  readonly mode: 'live';
   readonly scenario_id: ScenarioId;
   readonly config: RecoveryMode;
 }
@@ -42,7 +40,6 @@ export interface BatchSummary {
   readonly extra: number;
   readonly complete: boolean;
   readonly modes: {
-    readonly offline: ModeSummary;
     readonly live: ModeSummary;
   };
   readonly groups: readonly ScenarioArmSummary[];
@@ -92,13 +89,11 @@ export function summarizeRuns(
   runs: readonly RunSummaryInput[],
   expected = 30,
 ): BatchSummary {
-  const offline = emptyBucket();
   const live = emptyBucket();
   const groups = new Map<string, ScenarioArmSummary>();
 
   for (const run of runs) {
-    const modeBucket = run.manifest.mode === 'live' ? live : offline;
-    addRun(modeBucket, run);
+    addRun(live, run);
 
     const key = groupKey(run.manifest.mode, run.manifest.scenario_id, run.manifest.config);
     const existing = groups.get(key);
@@ -131,12 +126,6 @@ export function summarizeRuns(
     extra,
     complete,
     modes: {
-      offline: {
-        ...offline,
-        mode: 'offline',
-        complete: modeComplete(offline),
-        missing: modeMissing(offline),
-      },
       live: {
         ...live,
         mode: 'live',
@@ -155,9 +144,4 @@ export function summarizeRuns(
     }),
     run_ids: runs.map((run) => run.manifest.run_id),
   };
-}
-
-export async function recomputeRun(directory: string): Promise<BusinessMetrics> {
-  const evidence = await readRunEvidence(directory);
-  return evaluateRun(evidence);
 }

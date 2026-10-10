@@ -6,13 +6,3 @@ export interface SafeError {
   readonly code: string | null;
   readonly message: string;
 }
-
-export interface ScriptedToolCall {
-  readonly id: string;
-  readonly name: string;
-  readonly arguments: Readonly<Record<string, unknown>>;
-}
-
-export type ScriptedTurn =
-  | { readonly kind: 'tool-calls'; readonly calls: readonly ScriptedToolCall[] }
-  | { readonly kind: 'text'; readonly text: string };

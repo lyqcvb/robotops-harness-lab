@@ -22,30 +22,11 @@ import Tools, {
   type ToolDefinition,
   type ToolRunContext,
 } from '@deepseek-ai/dsh-tools';
-import Approval, { type ApprovalOutcome, type ApprovalRequest } from '@deepseek-ai/dsh-user-approval';
+import Approval from '@deepseek-ai/dsh-user-approval';
 
 import { DEFAULT_BUDGETS, DEFAULT_MODEL, TOOL_NAMES } from '../contracts/probe-constants.js';
-import type { LiveSmokeResult, ProbeApprovalMode, ProbeBudgets, ProbeCaseDefinition, ProbeCaseResult, ProbeExecutionResult, ProbePolicyFixture, ScriptedTurn } from '../contracts/probe.js';
+import type { LiveSmokeResult, ProbeBudgets, ProbeCaseResult } from '../contracts/probe.js';
 import { makeProbeEvent, safeError } from '../trace/probe-evidence.js';
-import { ScriptedAdapter } from './scripted-adapter.js';
-import { defaultOfflineCases } from './probe-scenarios.js';
-interface ModelClock {
-  now(): number;
-  advance(ms: number): void;
-}
-
-class MutableClock implements ModelClock {
-  private current: number;
-  constructor(initial: number) {
-    this.current = initial;
-  }
-  now(): number {
-    return this.current;
-  }
-  advance(ms: number): void {
-    this.current += ms;
-  }
-}
 
 interface PendingApproval {
   readonly runId: string;
@@ -91,21 +72,6 @@ function canonicalize(value: unknown): string {
 
 function callKey(sessionId: string, callId: string): string {
   return `${sessionId}\u0000${callId}`;
-}
-
-function approvalPairMatches(events: readonly SessionEvent[], pending: PendingApproval): boolean {
-  const asked = events.find((event) => (
-    event.type === 'approval/asked'
-    && String(event.data.callId ?? '') === pending.callId
-    && event.data.toolName === pending.name
-  ));
-  if (asked === undefined || asked.type !== 'approval/asked') return false;
-  return events.some((event) => (
-    event.type === 'approval/decided'
-    && event.data.id === asked.data.id
-    && event.data.outcome === 'allowed-once'
-    && event.seq > asked.seq
-  ));
 }
 
 function budgetFinish(): StreamChunk {
@@ -262,50 +228,9 @@ function validateBaseUrl(raw: string | undefined): string | undefined {
     throw new Error('DEEPSEEK_BASE_URL must not contain userinfo, query, or fragment');
   }
   if (url.protocol === 'https:') return url.toString().replace(/\/$/, '');
-  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1';
+  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]';
   if (url.protocol === 'http:' && local) return url.toString().replace(/\/$/, '');
   throw new Error('DEEPSEEK_BASE_URL must use https, or http only for localhost test endpoints');
-}
-
-async function raceApprovalDeadline(
-  deadline: number,
-  clock: ModelClock,
-  signal: AbortSignal | undefined,
-  operation: () => Promise<ApprovalOutcome>,
-): Promise<ApprovalOutcome> {
-  if (signal?.aborted) return 'cancelled';
-  const remaining = deadline - clock.now();
-  if (remaining <= 0) return 'cancelled';
-  return await new Promise<ApprovalOutcome>((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      signal?.removeEventListener('abort', onAbort);
-      resolve('cancelled');
-    }, Math.min(remaining, 2_147_483_647));
-    const onAbort = (): void => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolve('cancelled');
-    };
-    signal?.addEventListener('abort', onAbort, { once: true });
-    if (signal?.aborted) onAbort();
-    void operation().then((outcome) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', onAbort);
-      resolve(outcome);
-    }, (error: unknown) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', onAbort);
-      reject(error);
-    });
-  });
 }
 
 async function readPersistedEvents(
@@ -350,23 +275,17 @@ async function readPersistedEvents(
 async function executeRuntimeCase(input: {
   readonly runId: string;
   readonly caseId: string;
-  readonly mode: 'offline' | 'live';
   readonly persistenceRoot: string;
   readonly provider: string;
   readonly model: string;
   readonly prompt: string;
-  readonly approvalMode: ProbeApprovalMode;
-  readonly policyFixture: ProbePolicyFixture;
   readonly budgets: ProbeBudgets;
-  readonly turns?: readonly ScriptedTurn[];
-  readonly restrictToReadOnly: boolean;
-  readonly liveConfig?: Parameters<typeof DeepSeek.apply>[1];
+  readonly liveConfig: Parameters<typeof DeepSeek.apply>[1];
   readonly getProviderRoute?: (ctx: Context) => string;
 }): Promise<ProbeCaseResult> {
   const ctx = new Context();
   const argumentContracts = toolArgumentContracts();
   let modelRequestAttempts = 0;
-  const clock = new MutableClock(Date.now());
   const counters: RuntimeCounters = {
     modelRequests: 0,
     toolRequests: 0,
@@ -410,47 +329,6 @@ async function executeRuntimeCase(input: {
     });
   };
 
-  const answerApproval = async (req: ApprovalRequest): Promise<ApprovalOutcome> => {
-    if (req.callId === undefined) return 'rejected';
-    const sessionId = String(req.agent.id);
-    const key = callKey(sessionId, String(req.callId));
-    const record = pending.get(key);
-    if (record === undefined || record.name !== req.toolName) return 'rejected';
-    return await raceApprovalDeadline(record.deadline, clock, req.signal, async () => {
-      if (req.signal?.aborted === true || activeDeadlineExceeded) return 'cancelled';
-      if (clock.now() >= record.deadline) {
-        pending.delete(key);
-        terminalCallIds.add(key);
-        recordProbe('PROBE_APPROVAL_EXPIRED', {
-          session_id: sessionId,
-          call_id: String(req.callId),
-          name: req.toolName,
-        });
-        return 'cancelled';
-      }
-      if (input.approvalMode === 'cancelled') return 'cancelled';
-      if (input.approvalMode === 'rejected') return 'rejected';
-      if (input.approvalMode === 'expire') {
-        clock.advance(input.budgets.approvalMs + 1);
-        return 'allowed-once';
-      }
-      if (input.approvalMode === 'approve-once') {
-        const priorGrant = probeEvents.some((event) => (
-          isRecord(event) && event.event === 'PROBE_APPROVAL_GRANTED'
-        ));
-        if (priorGrant) return 'rejected';
-        recordProbe('PROBE_APPROVAL_GRANTED', {
-          session_id: sessionId,
-          call_id: String(req.callId),
-          name: req.toolName,
-          source: 'scripted',
-        });
-        return 'allowed-once';
-      }
-      return 'unavailable';
-    });
-  };
-
   try {
     activeTimer = setTimeout(() => {
       activeDeadlineExceeded = true;
@@ -472,13 +350,8 @@ async function executeRuntimeCase(input: {
     await ctx.plugin(SessionProjections);
     await ctx.plugin(Approval, { policy: 'ask' });
 
-    if (input.mode === 'offline') {
-      ctx.llm.registerAdapter(['stage0-scripted'], new ScriptedAdapter(input.turns ?? []));
-    } else {
-      if (input.liveConfig === undefined) throw new Error('live DeepSeek config is missing');
-      await ctx.plugin(DeepSeek, input.liveConfig);
-      providerRoute = input.getProviderRoute?.(ctx) ?? ctx.llm.listProviders()[0]?.id ?? input.provider;
-    }
+    await ctx.plugin(DeepSeek, input.liveConfig);
+    providerRoute = input.getProviderRoute?.(ctx) ?? ctx.llm.listProviders()[0]?.id ?? input.provider;
 
     const toolDefinitions = toolParameterSchemas().map(([name, description, parameters]) => (
       makeProbeTool(
@@ -564,8 +437,8 @@ async function executeRuntimeCase(input: {
       if ((executionsByName.get('force_reboot') ?? 0) >= 1) {
         return { kind: 'deny' as const, reason: 'force_reboot may execute at most once' };
       }
-      if (input.policyFixture === 'allow-force') return { kind: 'allow' as const };
-      const deadline = clock.now() + input.budgets.approvalMs;
+      // No approval handler is registered, so the native Approval plugin answers `unavailable`.
+      const deadline = Date.now() + input.budgets.approvalMs;
       pending.set(dispatchKey, {
         runId: input.runId,
         sessionId,
@@ -582,15 +455,8 @@ async function executeRuntimeCase(input: {
         deadline,
         deadline_ms: input.budgets.approvalMs,
       });
-      return { kind: 'ask' as const, reason: 'force_reboot requires one-time scripted approval in Stage 0' };
+      return { kind: 'ask' as const, reason: 'force_reboot requires one-time approval in Stage 0' };
     });
-
-    if (input.approvalMode !== 'unavailable') {
-      ctx.on('approval/request', async (req, next) => {
-        if (req.toolName !== 'force_reboot') return await next();
-        return await answerApproval(req);
-      });
-    }
 
     ctx.tools.guard((exec) => {
       if (!TOOL_NAMES.includes(exec.name as typeof TOOL_NAMES[number])) {
@@ -599,7 +465,7 @@ async function executeRuntimeCase(input: {
       if (exec.signal.aborted || activeDeadlineExceeded) {
         return 'tool call was cancelled or exceeded the active deadline';
       }
-      if ((input.mode === 'live' || input.restrictToReadOnly) && exec.name !== 'get_robot_status') {
+      if (exec.name !== 'get_robot_status') {
         return 'live smoke permits only get_robot_status';
       }
       if (counters.toolRequests > input.budgets.toolCalls) {
@@ -612,40 +478,6 @@ async function executeRuntimeCase(input: {
         });
         return 'tool call budget exceeded';
       }
-      if (exec.name !== 'force_reboot') {
-        if (exec.name === 'restart_navigation' && (executionsByName.get(exec.name) ?? 0) >= 2) {
-          return 'restart_navigation retry budget exhausted';
-        }
-        return undefined;
-      }
-      const sessionId = String(exec.agent?.id ?? '');
-      const key = callKey(sessionId, String(exec.callId));
-      if (terminalCallIds.has(key)) return 'force_reboot authorization was already consumed or terminated';
-      const record = pending.get(key);
-      if (record === undefined) return 'force_reboot has no pending authorization';
-      if (record.runId !== input.runId || record.sessionId !== sessionId) {
-        return 'force_reboot authorization is bound to another run or session';
-      }
-      if (record.name !== exec.name || record.canonicalArgs !== canonicalize(exec.arguments)) {
-        return 'force_reboot authorization does not match the tool call arguments';
-      }
-      if (exec.signal.aborted || activeDeadlineExceeded) return 'force_reboot authorization was cancelled or timed out';
-      if (clock.now() >= record.deadline) {
-        pending.delete(key);
-        terminalCallIds.add(key);
-        return 'force_reboot authorization expired';
-      }
-      if (exec.agent === undefined || !approvalPairMatches(exec.agent.session.snapshotEvents(), record)) {
-        return 'force_reboot authorization has no matching native approval decision';
-      }
-      pending.delete(key);
-      terminalCallIds.add(key);
-      recordProbe('PROBE_APPROVAL_CONSUMED', {
-        session_id: sessionId,
-        call_id: String(exec.callId),
-        name: exec.name,
-        source: 'native-event-allowed-once',
-      });
       return undefined;
     });
 
@@ -659,11 +491,9 @@ async function executeRuntimeCase(input: {
         provider: providerRoute,
         model: input.model,
         maxTokens: 512,
-        ...(input.mode === 'live' ? { reasoningEffort: ReasoningEffortId('off') } : {}),
+        reasoningEffort: ReasoningEffortId('off'),
       },
-      ...(input.restrictToReadOnly
-        ? { setup: (agentCtx: Context) => { agentCtx.tools.restrict({ allow: ['get_robot_status'] }); } }
-        : {}),
+      setup: (agentCtx: Context) => { agentCtx.tools.restrict({ allow: ['get_robot_status'] }); },
     });
     toolNames = ctx.tools.schemas(handle.agent).map((schema) => schema.name);
 
@@ -671,8 +501,6 @@ async function executeRuntimeCase(input: {
       session_id: sessionIdRef.value,
       provider: providerRoute,
       model: input.model,
-      approval_mode: input.approvalMode,
-      policy_fixture: input.policyFixture,
       tool_names: toolNames,
     });
 
@@ -731,55 +559,6 @@ async function executeRuntimeCase(input: {
   };
 }
 
-function baseCaseInput(
-  runId: string,
-  projectRoot: string,
-  definition: ProbeCaseDefinition,
-): Parameters<typeof executeRuntimeCase>[0] {
-  return {
-    runId,
-    caseId: definition.id,
-    mode: 'offline',
-    persistenceRoot: path.resolve(projectRoot, '.stage0', runId, definition.id),
-    provider: 'stage0-scripted',
-    model: 'stage0-scripted-v1',
-    prompt: definition.prompt,
-    approvalMode: definition.approvalMode,
-    policyFixture: definition.policyFixture ?? 'default',
-    budgets: mergeBudgets(definition.budgets),
-    turns: definition.turns,
-    restrictToReadOnly: definition.restrictToReadOnly ?? false,
-  };
-}
-
-export async function executeOfflineSecurityCases(
-  projectRoot: string,
-  runId: string,
-  definitions: readonly ProbeCaseDefinition[] = defaultOfflineCases(),
-): Promise<ProbeExecutionResult> {
-  const cases: ProbeCaseResult[] = [];
-  for (const definition of definitions) {
-    cases.push(await executeRuntimeCase(baseCaseInput(runId, projectRoot, definition)));
-  }
-  const nativeEvents = cases.flatMap((item) => item.nativeEvents);
-  const probeEvents = cases.flatMap((item) => item.probeEvents);
-  const toolNames = cases[0]?.toolNames ?? [];
-  const counters = cases.reduce((total, item) => ({
-    modelRequests: total.modelRequests + item.modelRequests,
-    toolRequests: total.toolRequests + item.toolRequests,
-    actionExecutions: total.actionExecutions + item.actionExecutions,
-    approvalAsked: total.approvalAsked + item.approvalAsked,
-    approvalAllowedOnce: total.approvalAllowedOnce + item.approvalAllowedOnce,
-  }), {
-    modelRequests: 0,
-    toolRequests: 0,
-    actionExecutions: 0,
-    approvalAsked: 0,
-    approvalAllowedOnce: 0,
-  });
-  return { cases, nativeEvents, probeEvents, toolNames, counters };
-}
-
 export async function executeLiveSmoke(
   projectRoot: string,
   runId: string,
@@ -790,15 +569,11 @@ export async function executeLiveSmoke(
   const result = await executeRuntimeCase({
     runId,
     caseId: 'LIVE',
-    mode: 'live',
     persistenceRoot: path.resolve(projectRoot, '.stage0', runId, 'LIVE'),
     provider,
     model,
     prompt: 'Use only get_robot_status for robot_id "R-03". Do not call any write action. Then state that the Stage 0 probe result was read.',
-    approvalMode: 'unavailable',
-    policyFixture: 'default',
     budgets: mergeBudgets({ modelRequests: 3, toolCalls: 3, approvalMs: DEFAULT_BUDGETS.approvalMs }),
-    restrictToReadOnly: true,
     liveConfig: {
       apiKeyEnv: 'DEEPSEEK_API_KEY',
       ...(baseUrl === undefined ? {} : { baseURL: baseUrl }),

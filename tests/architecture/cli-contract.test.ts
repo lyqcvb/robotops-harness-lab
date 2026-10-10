@@ -293,7 +293,6 @@ test('demo source and CLI contract pin the core manual scenario and reject scrip
 
   assert.match(demoSource, /scenarioId:\s*'navigation_restart_fail_then_reboot'/);
   assert.match(demoSource, /config:\s*'full'/);
-  assert.match(demoSource, /mode:\s*'live'/);
   assert.match(demoSource, /approvalMode:\s*'manual'/);
   assert.doesNotMatch(demoSource, /navigation_restart_success/);
   assert.doesNotMatch(demoSource, /approvalMode:\s*'scripted'/);

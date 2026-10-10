@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import test from 'node:test';
 
 import type {
@@ -13,13 +12,8 @@ import type {
 import type {
   RecoveryMode,
   RunManifest,
-  RunManifestV2,
   ScenarioId,
 } from '../../src/contracts/run.js';
-import type {
-  ArtifactFingerprint,
-  RunProvenance,
-} from '../../src/contracts/provenance.js';
 import { evaluateRun } from '../../src/eval/business-acceptance.js';
 import { isSoftStopReason, normalizeStopReason } from '../../src/eval/business/evidence-parsers.js';
 
@@ -71,12 +65,12 @@ class RunBuilder {
   constructor(scenarioId: ScenarioId, config: RecoveryMode, initialFault = scenarioId !== 'happy_path') {
     const suffix = `${scenarioId}-${config}`;
     this.manifest = {
-      schema_version: 1,
+      schema_version: 3,
       run_id: `run-${suffix}`,
       created_at: '2026-09-26T00:00:00.000Z',
       scenario_id: scenarioId,
-      mode: 'offline',
-      model: 'scripted-test',
+      mode: 'live',
+      model: 'test-model',
       config,
       approval_source: 'none',
       batch_id: 'batch-test',
@@ -428,9 +422,34 @@ test('all scenario and recovery matrix arms pass from complete evidence', () => 
       assert.deepEqual(metrics.integrity_errors, []);
       assert.equal(metrics.tokens, 'NOT_MEASURED');
       assert.equal(metrics.cost, 'NOT_MEASURED');
-      assert.deepEqual(metrics, evaluateRun(run), `${scenarioId}/${config} recompute`);
+      assert.deepEqual(metrics, evaluateRun(run), `${scenarioId}/${config} deterministic`);
     }
   }
+});
+
+test('tokens and cost are measured from native assistant usage', () => {
+  const run = cloneRun(buildRun('happy_path', 'full'));
+  const metrics = evaluateRun(run);
+  const mutable = run as unknown as { nativeEvents: Record<string, unknown>[] };
+  const envelope = { run_id: run.manifest.run_id, session_id: (mutable.nativeEvents[0] as { session_id: string }).session_id };
+  for (let index = 0; index < metrics.model_requests; index += 1) {
+    mutable.nativeEvents.push({
+      ...envelope,
+      type: 'assistant/message',
+      time: Date.parse('2026-10-12T02:00:00Z'),
+      data: {
+        message: { role: 'assistant', content: [], source: { kind: 'model', provider: 'deepseek-official', model: 'deepseek-flash' } },
+        usage: { inputTokens: 100, outputTokens: 10, cacheReadTokens: 1000 },
+      },
+    });
+  }
+  const measured = evaluateRun(run);
+  assert.equal(measured.status, 'PASS');
+  const requests = metrics.model_requests;
+  assert.deepEqual(measured.tokens, { input_cache_hit: 1000 * requests, input_cache_miss: 100 * requests, output: 10 * requests, total: 1110 * requests });
+  assert.ok(measured.cost !== 'NOT_MEASURED');
+  assert.equal(measured.cost.peak_requests, requests);
+  assert.equal(measured.cost.total, Math.round(requests * (1000 * 0.04 + 100 * 2 + 10 * 8) * 100) / 1e8);
 });
 
 function mutateEvent(
@@ -545,12 +564,14 @@ test('reports task, recovery, model, action, failure and approval metrics', () =
     resume_task: 1,
   });
   assert.deepEqual(full.approval_sources, ['scripted']);
+  assert.equal(full.approval_requests, 1);
 
   const failFast = evaluateRun(buildRun('navigation_restart_fail_then_reboot', 'fail-fast'));
   assert.equal(failFast.task_success, false);
   assert.equal(failFast.recovery_success, false);
   assert.equal(failFast.failed_tools, 1);
   assert.equal(failFast.approval_sources.length, 0);
+  assert.equal(failFast.approval_requests, 0);
 
   const rejected = evaluateRun(buildRun('approval_rejected', 'full'));
   assert.equal(rejected.scenario_pass, true);
@@ -776,81 +797,11 @@ test('initial robot/task reads and successful SOP evidence are mandatory', () =>
 });
 
 
-interface ProvenanceFile {
-  readonly path: string;
-  readonly sha256: string;
-}
-
-function sha256(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
-}
-
-function fileDigest(seed: string): string {
-  return sha256(seed).toLowerCase();
-}
-
-function completeCodeFiles(): ProvenanceFile[] {
-  return [
-    { path: 'app/business.js', sha256: fileDigest('app') },
-    { path: 'contracts/run.js', sha256: fileDigest('contracts') },
-    { path: 'eval/business-acceptance.js', sha256: fileDigest('eval') },
-    { path: 'harness/run.js', sha256: fileDigest('harness') },
-    { path: 'services/business.js', sha256: fileDigest('services') },
-    { path: 'simulator/simulator.js', sha256: fileDigest('simulator') },
-    { path: 'tools/actions.js', sha256: fileDigest('tools') },
-    { path: 'trace/run-evidence.js', sha256: fileDigest('trace') },
-  ];
-}
-
-function fingerprint(files: readonly ProvenanceFile[]): ArtifactFingerprint {
-  const copied = files.map((entry) => ({ ...entry }));
-  return { sha256: sha256(stableJson(copied)), files: copied };
-}
-
-function evaluatorFilesFrom(codeFiles: readonly ProvenanceFile[]): ProvenanceFile[] {
-  const roots = new Set(['eval', 'contracts', 'trace']);
-  return codeFiles.filter((entry) => roots.has(entry.path.split('/')[0]!));
-}
-
-function provenanceFor(
-  codeFiles: readonly ProvenanceFile[],
-  evaluatorFiles: readonly ProvenanceFile[] = evaluatorFilesFrom(codeFiles),
-): RunProvenance {
-  return {
-    schema_version: 1,
-    basis: 'compiled-javascript',
-    code: fingerprint(codeFiles),
-    evaluator: {
-      ...fingerprint(evaluatorFiles),
-      version: 'business-evaluator-v2',
-    },
-  };
-}
-
 function withManifest(run: BuiltRun, manifest: RunManifest): BuiltRun {
   return { manifest, events: run.events, nativeEvents: run.nativeEvents };
 }
 
-function withV2(run: BuiltRun, provenance: RunProvenance): BuiltRun {
-  return withManifest(run, {
-    ...run.manifest,
-    schema_version: 2,
-    provenance,
-  } as RunManifest);
-}
-
-function mutableProvenance(run: BuiltRun): {
-  code: { sha256: string; files: ProvenanceFile[] };
-  evaluator: { sha256: string; files: ProvenanceFile[]; version: string };
-} {
-  return (run.manifest as RunManifestV2).provenance as unknown as {
-    code: { sha256: string; files: ProvenanceFile[] };
-    evaluator: { sha256: string; files: ProvenanceFile[]; version: string };
-  };
-}
-
-
-test('legacy v1 manifests remain valid without provenance', () => {
+test('schema v3 manifests pass without provenance', () => {
   const run = buildRun('happy_path', 'full');
   assert.equal('provenance' in run.manifest, false);
   const metrics = evaluateRun(run);
@@ -858,93 +809,17 @@ test('legacy v1 manifests remain valid without provenance', () => {
   assert.deepEqual(metrics.integrity_errors, []);
 });
 
-test('a complete v2 provenance passes and bad hashes fail closed', () => {
-  const run = withV2(buildRun('happy_path', 'full'), provenanceFor(completeCodeFiles()));
-  const metrics = evaluateRun(run);
-  assert.equal(metrics.status, 'PASS');
-  assert.deepEqual(metrics.integrity_errors, []);
-
-  const missingHash = cloneRun(run);
-  delete (mutableProvenance(missingHash).code as unknown as { sha256?: string }).sha256;
-  const missingMetrics = evaluateRun(missingHash);
-  assert.equal(missingMetrics.status, 'FAIL');
-  assert.ok(missingMetrics.integrity_errors.includes('manifest_provenance_code_sha256'));
-
-  const wrongHash = cloneRun(run);
-  mutableProvenance(wrongHash).code.sha256 = '0'.repeat(64);
-  const wrongMetrics = evaluateRun(wrongHash);
-  assert.equal(wrongMetrics.status, 'FAIL');
-  assert.ok(wrongMetrics.integrity_errors.includes('manifest_provenance_code_fingerprint_mismatch'));
-});
-
-test('v2 provenance rejects duplicate, escaped, colon and unsafe paths', () => {
-  const duplicateFiles = completeCodeFiles();
-  duplicateFiles.push({ path: 'app/business.js', sha256: fileDigest('duplicate') });
-  const duplicateRun = withV2(buildRun('happy_path', 'full'), provenanceFor(duplicateFiles));
-  const duplicateMetrics = evaluateRun(duplicateRun);
-  assert.equal(duplicateMetrics.status, 'FAIL');
-  assert.ok(duplicateMetrics.integrity_errors.some((error) => error.includes('duplicate')));
-
-  for (const unsafePath of ['../app/business.js', 'C:/app/business.js', 'app\\business.js', 'app//business.js', './app/business.js']) {
-    const files = completeCodeFiles().map((entry) => (
-      entry.path === 'app/business.js' ? { ...entry, path: unsafePath } : entry
-    ));
-    const run = withV2(buildRun('happy_path', 'full'), provenanceFor(files));
+test('retired and unknown manifest schema versions fail closed', () => {
+  // 1 (evidence digest) and 2 (provenance) are retired shapes; 4 is unknown.
+  for (const version of [1, 2, 4]) {
+    const run = withManifest(buildRun('happy_path', 'full'), {
+      ...buildRun('happy_path', 'full').manifest,
+      schema_version: version,
+    } as unknown as RunManifest);
     const metrics = evaluateRun(run);
-    assert.equal(metrics.status, 'FAIL', unsafePath);
-    assert.ok(metrics.integrity_errors.includes('manifest_provenance_code_files'), unsafePath);
+    assert.equal(metrics.status, 'FAIL', `schema_version ${version}`);
+    assert.ok(metrics.integrity_errors.includes('manifest_schema_version'));
   }
-});
-
-test('v2 evaluator files must close over the filtered code file list', () => {
-  const codeFiles = completeCodeFiles().filter((entry) => entry.path !== 'eval/business-acceptance.js');
-  const fullEvaluatorFiles = evaluatorFilesFrom(completeCodeFiles());
-  const run = withV2(
-    buildRun('happy_path', 'full'),
-    provenanceFor(codeFiles, fullEvaluatorFiles),
-  );
-  const metrics = evaluateRun(run);
-  assert.equal(metrics.status, 'FAIL');
-  assert.ok(metrics.integrity_errors.includes('manifest_provenance_evaluator_files_closure'));
-});
-
-test('v2 provenance rejects unsafe evaluator metadata and scope', () => {
-  const valid = withV2(buildRun('happy_path', 'full'), provenanceFor(completeCodeFiles()));
-
-  const emptyVersion = cloneRun(valid);
-  mutableProvenance(emptyVersion).evaluator.version = '';
-  const versionMetrics = evaluateRun(emptyVersion);
-  assert.equal(versionMetrics.status, 'FAIL');
-  assert.ok(versionMetrics.integrity_errors.includes('manifest_provenance_evaluator_version'));
-
-  const badBasis = cloneRun(valid);
-  ((badBasis.manifest as RunManifestV2).provenance as unknown as { basis: string }).basis = 'source';
-  const basisMetrics = evaluateRun(badBasis);
-  assert.equal(basisMetrics.status, 'FAIL');
-  assert.ok(basisMetrics.integrity_errors.includes('manifest_provenance_basis'));
-
-  const codeFiles = completeCodeFiles();
-  const outOfScopeEvaluator = [
-    ...evaluatorFilesFrom(codeFiles),
-    codeFiles.find((entry) => entry.path === 'app/business.js')!,
-  ];
-  const outOfScope = withV2(
-    buildRun('happy_path', 'full'),
-    provenanceFor(codeFiles, outOfScopeEvaluator),
-  );
-  const scopeMetrics = evaluateRun(outOfScope);
-  assert.equal(scopeMetrics.status, 'FAIL');
-  assert.ok(scopeMetrics.integrity_errors.some((error) => error.includes('evaluator_scope')));
-});
-
-test('unknown manifest schema versions fail closed', () => {
-  const run = withManifest(buildRun('happy_path', 'full'), {
-    ...buildRun('happy_path', 'full').manifest,
-    schema_version: 3,
-  } as unknown as RunManifest);
-  const metrics = evaluateRun(run);
-  assert.equal(metrics.status, 'FAIL');
-  assert.ok(metrics.integrity_errors.includes('manifest_schema_version'));
 });
 
 test('evaluator soft-stop classification keeps legacy behavior', () => {
@@ -1055,15 +930,14 @@ for (const mutation of readMutations) {
   });
 }
 
-test('sessionless offline reads still require the business request and handler chain', () => {
+test('a run without a real native session is blocked, never passed', () => {
   const run = evidenceRun();
   run.nativeEvents = [];
   run.events.forEach((event) => { event.session_id = null; });
-  assert.equal(evaluateRun(run).status, 'PASS');
-  run.events = run.events.filter((event) => !(event.call_id === readCall && event.type === 'handler_started'));
-  resequence(run);
-  assertEvidenceFailure(run);
-  assert.equal(evaluateRun(run).task_success, false);
+  const metrics = evaluateRun(run);
+  assert.equal(metrics.status, 'BLOCKED');
+  assert.equal(metrics.scenario_pass, false);
+  assert.ok(metrics.integrity_errors.includes('live_missing_real_session'));
 });
 
 for (const argumentsValue of [undefined, '{}', '{"robot_id":"R-99"}', '{"robot_id":"R-03","extra":true}', '{', 'null', '[]']) {

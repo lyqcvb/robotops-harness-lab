@@ -31,7 +31,6 @@ import {
   digest,
   writeRunBundle,
 } from '../trace/run-evidence.js';
-import { collectRunProvenance } from '../trace/run-provenance.js';
 import { readInstalledVersions, readLockfileDigest } from '../trace/environment.js';
 import { redactValue, safeError } from '../trace/redaction.js';
 import { redactionSecrets } from './business-io.js';
@@ -46,7 +45,6 @@ export interface RunBusinessOptions {
   readonly projectRoot: string;
   readonly scenarioId: ScenarioId;
   readonly config: RecoveryMode;
-  readonly mode: 'offline' | 'live';
   readonly approvalMode: ApprovalMode;
   readonly batchId?: string;
   readonly repeat?: number;
@@ -170,29 +168,24 @@ export async function runBusinessInternal(
 ): Promise<RunBusinessResult> {
   const projectRoot = path.resolve(options.projectRoot);
   const scenario = getBusinessScenario(options.scenarioId, options.config);
-  const runId = createRunId(options.mode);
+  const runId = createRunId('live');
   const repeat = options.repeat ?? 1;
   if (!Number.isInteger(repeat) || repeat < 0) {
     throw new TypeError('repeat must be a non-negative integer');
   }
 
-  const [installedVersions, lockfileSha256, provenance] = await Promise.all([
+  const [installedVersions, lockfileSha256] = await Promise.all([
     readInstalledVersions(projectRoot),
     readLockfileDigest(projectRoot),
-    collectRunProvenance(),
   ]);
-  const model =
-    options.mode === 'offline'
-      ? 'scripted-business-v1'
-      : options.model?.trim() || defaultModel(env);
+  const model = options.model?.trim() || defaultModel(env);
 
   const manifest: RunManifest = {
-    schema_version: 2,
-    provenance,
+    schema_version: 3,
     run_id: runId,
     created_at: new Date().toISOString(),
     scenario_id: options.scenarioId,
-    mode: options.mode,
+    mode: 'live',
     model,
     config: options.config,
     approval_source: options.approvalMode,
@@ -204,7 +197,7 @@ export async function runBusinessInternal(
     }),
     prompt_sha256: digest(scenario.prompt),
     config_sha256: digest({
-      mode: options.mode,
+      mode: 'live',
       recovery_mode: options.config,
       approval_source: options.approvalMode,
       model,
@@ -255,14 +248,15 @@ export async function runBusinessInternal(
   );
 
   let runtime: BusinessRuntimeResult;
-  if (options.mode === 'live' && !hasLiveApiKey(env)) {
+  const hasApiKey = hasLiveApiKey(env);
+  if (!hasApiKey) {
     runtime = {
       status: 'BLOCKED',
       session_id: null,
       persisted_event_count: 0,
       error: {
         name: 'MissingApiKeyError',
-        message: 'DEEPSEEK_API_KEY is required for live mode',
+        message: 'DEEPSEEK_API_KEY is required to run the agent',
         code: 'MISSING_API_KEY',
       },
     };
@@ -276,10 +270,8 @@ export async function runBusinessInternal(
         projectRoot,
         runId,
         scenarioId: options.scenarioId,
-        mode: options.mode,
         model,
         prompt: scenario.prompt,
-        turns: scenario.turns,
         trace,
         boundary,
         ledger,
@@ -303,8 +295,7 @@ export async function runBusinessInternal(
     }
   }
 
-  const runtimeAttempted = !(options.mode === 'live' && !hasLiveApiKey(env));
-  if (runtimeAttempted) {
+  if (hasApiKey) {
     await runHostCleanup(services, trace, runtime, boundary, secrets);
   }
 
@@ -316,8 +307,8 @@ export async function runBusinessInternal(
 
   const events = trace.events();
   const metrics = evaluateRun({ manifest, events, nativeEvents });
-  // Report the manifest exactly as written, so the returned value and the on-disk
-  // artifact agree (this is what seals the evidence digest).
+  // Report the manifest exactly as written (redacted), so the returned value and the
+  // on-disk artifact agree.
   const written = await writeRunBundle({
     projectRoot,
     manifest,

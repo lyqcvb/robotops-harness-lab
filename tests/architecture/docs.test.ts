@@ -19,7 +19,7 @@ const legalStageStatuses = ['PLANNED', 'IN_PROGRESS', 'DONE', 'BLOCKED'] as cons
 
 /**
  * `evidence/` and `results/` hold artifacts this project generates itself
- * (`npm run eval`, `npm run test:integration`, `npm run probe:*`, `npm run demo`).
+ * (`npm run eval`, `npm run test:e2e`, `npm run probe:live`, `npm run demo`).
  * They are never committed, so links into these trees may legitimately be absent.
  */
 const GENERATED_ARTIFACT_ROOTS = ['evidence/', 'results/'] as const;

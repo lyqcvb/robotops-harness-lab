@@ -23,11 +23,9 @@ interface RunOutput {
 }
 export const USAGE = [
   'usage: business <command> [options]',
-  '  integration',
   '  e2e [--scenario <scenario>] [--config full|fail-fast] [--approval scripted|manual|none]',
-  '  eval [--offline]',
+  '  eval [--repeats <1-100>]',
   '  demo',
-  '  recompute [--run <run-directory> | --all]',
 ].join('\n');
 
 const SECRET_ENV_KEY = /(^|_)(api_?key|authorization|bearer|password|secret|token)($|_)/i;

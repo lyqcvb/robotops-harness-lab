@@ -26,14 +26,13 @@ import Approval from '@deepseek-ai/dsh-user-approval';
 
 import type { JsonValue } from '@deepseek-ai/dsh-util-values';
 
-import type { ExecutionContext } from '../contracts/business.js';
+import type { ExecutionContext, ToolResult } from '../contracts/business.js';
 import { isSoftStopReason } from '../contracts/policy.js';
 import {
   TOOL_NAMES,
   TOOL_PARAMETER_SCHEMAS,
   TOOL_OUTPUT_SCHEMA,
 } from '../contracts/tool-protocol.js';
-import { ScriptedAdapter } from './scripted-adapter.js';
 import { createApprovalHandler } from './runtime-approval.js';
 import {
   nativeApprovalGranted,
@@ -44,13 +43,14 @@ import {
 import {
   abortedFinish,
   asStringRecord,
+  blockedResult,
   budgetFinish,
   denied,
+  type BlockCall,
   finishStream,
   isRecord,
   MAX_TIMER_MS,
   MAX_TOKENS,
-  OFFLINE_PROVIDER,
   PERSISTENCE_SEGMENT,
   parseToolArguments,
   safeError,
@@ -113,7 +113,7 @@ export async function executeBusinessRuntime(
   let primaryError: unknown;
   let disposeError: SafeError | null = null;
   let persistedEventCount = 0;
-  let provider = input.mode === 'offline' ? OFFLINE_PROVIDER : 'deepseek';
+  let provider = 'deepseek';
   let toolNames: readonly string[] = [...TOOL_NAMES];
 
   const clearActiveTimer = (): void => {
@@ -165,10 +165,21 @@ export async function executeBusinessRuntime(
     ...(exec.signal === undefined ? {} : { signal: exec.signal }),
   });
 
+  // Model-facing results of calls stopped before their tool body ran, keyed by call id;
+  // the tools/post-execute listener consumes each one.
+  const blockedCalls = new Map<string, ToolResult>();
+  const blockCall: BlockCall = (callId, toolName, stage, result) => {
+    const explained = blockedResult(stage, result);
+    blockedCalls.set(callId, explained);
+    input.trace.record('tool_result', callId, { tool_name: toolName, result: explained, phase: stage });
+    return explained;
+  };
+
   const answerApproval = createApprovalHandler({
     input,
     pendingApprovals,
     armActiveTimer,
+    blockCall,
   });
 
   try {
@@ -191,8 +202,8 @@ export async function executeBusinessRuntime(
     await ctx.plugin(SessionProjections);
     await ctx.plugin(Approval, { policy: 'ask' });
 
-    if (input.mode === 'offline') {
-      ctx.llm.registerAdapter([OFFLINE_PROVIDER], new ScriptedAdapter(input.turns));
+    if (input.testModel !== undefined) {
+      ctx.llm.registerAdapter([input.testModel.provider], input.testModel.adapter);
     } else {
       const baseUrl = validateBaseUrl(process.env.DEEPSEEK_BASE_URL);
       await ctx.plugin(DeepSeek, {
@@ -321,33 +332,21 @@ export async function executeBusinessRuntime(
       preExecuteSeen.add(execCtx.call_id);
       const failure = input.boundary.preflight(exec.name, exec.arguments, execCtx);
       if (failure !== null) {
-        input.trace.record('tool_result', execCtx.call_id, {
-          tool_name: String(exec.name),
-          result: failure,
-          phase: 'preflight',
-        });
-        return { kind: 'deny' as const, reason: failure.reason };
+        const blocked = blockCall(execCtx.call_id, String(exec.name), 'preflight', failure);
+        return { kind: 'deny' as const, reason: blocked.reason };
       }
       if (exec.name !== 'force_reboot') return { kind: 'allow' as const };
 
       const args = asStringRecord(exec.arguments);
       if (args === null) {
         const invalid = denied('INVALID_ARGUMENTS', 'force_reboot requires exact string arguments');
-        input.trace.record('tool_result', execCtx.call_id, {
-          tool_name: 'force_reboot',
-          result: invalid,
-          phase: 'preflight',
-        });
-        return { kind: 'deny' as const, reason: invalid.reason };
+        const blocked = blockCall(execCtx.call_id, 'force_reboot', 'preflight', invalid);
+        return { kind: 'deny' as const, reason: blocked.reason };
       }
       if (pendingApprovals.has(execCtx.call_id)) {
         const replay = denied('APPROVAL_REPLAY', 'force_reboot approval is already pending for this call');
-        input.trace.record('tool_result', execCtx.call_id, {
-          tool_name: 'force_reboot',
-          result: replay,
-          phase: 'preflight',
-        });
-        return { kind: 'deny' as const, reason: replay.reason };
+        const blocked = blockCall(execCtx.call_id, 'force_reboot', 'preflight', replay);
+        return { kind: 'deny' as const, reason: blocked.reason };
       }
 
       const fingerprint = input.boundary.approvalFingerprint(args);
@@ -357,12 +356,8 @@ export async function executeBusinessRuntime(
           'APPROVAL_REQUEST_INVALID',
           'force_reboot requires a valid one-time approval binding',
         );
-        input.trace.record('tool_result', execCtx.call_id, {
-          tool_name: 'force_reboot',
-          result: invalid,
-          phase: 'preflight',
-        });
-        return { kind: 'deny' as const, reason: invalid.reason };
+        const blocked = blockCall(execCtx.call_id, 'force_reboot', 'preflight', invalid);
+        return { kind: 'deny' as const, reason: blocked.reason };
       }
 
       // The deadline comes from the ledger's own monotonic clock so the durable
@@ -392,12 +387,31 @@ export async function executeBusinessRuntime(
       const execCtx = executionContextOf(exec);
       const failure = input.boundary.preflight(exec.name, exec.arguments, execCtx);
       if (failure !== null) {
-        return `${failure.error_code ?? 'DENIED'}: ${failure.reason}`;
+        return blockCall(execCtx.call_id, String(exec.name), 'guard', failure).reason;
       }
       if (exec.name === 'force_reboot' && !nativeApprovalGranted(input.nativeEvents, execCtx)) {
-        return 'force_reboot has no matching native allowed-once approval for this run, session, and call';
+        const missing = denied(
+          'APPROVAL_NOT_GRANTED',
+          'force_reboot has no matching native allowed-once approval for this run, session, and call',
+        );
+        return blockCall(execCtx.call_id, 'force_reboot', 'guard', missing).reason;
       }
       return undefined;
+    });
+
+    // A blocked call reaches the model as the SDK's `Error: <reason>` text. Replace it with
+    // the four-field result so the model sees status, error_code and that nothing ran.
+    ctx.on('tools/post-execute', async (exec, result, next) => {
+      const decision = await next();
+      const callId = String(exec.callId);
+      const blocked = blockedCalls.get(callId);
+      if (blocked === undefined || !result.isError || decision.kind !== 'accept') return decision;
+      blockedCalls.delete(callId);
+      return {
+        kind: 'accept' as const,
+        content: [{ type: 'text' as const, text: JSON.stringify(blocked) }],
+        ...(decision.additionalContexts === undefined ? {} : { additionalContexts: decision.additionalContexts }),
+      };
     });
 
     await ctx.plugin(Loop, { agents: [], maxParallelToolCalls: 1 });
@@ -412,7 +426,7 @@ export async function executeBusinessRuntime(
         provider,
         model: input.model,
         maxTokens: MAX_TOKENS,
-        ...(input.mode === 'live' ? { reasoningEffort: ReasoningEffortId('off') } : {}),
+        ...(input.testModel === undefined ? { reasoningEffort: ReasoningEffortId('off') } : {}),
       },
     });
 
@@ -432,7 +446,7 @@ export async function executeBusinessRuntime(
     toolNames = ctx.tools.schemas(handle.agent).map((schema) => schema.name);
     input.trace.record('runtime_ready', null, {
       scenario_id: input.scenarioId,
-      mode: input.mode,
+      mode: 'live',
       provider,
       model: input.model,
       session_id: realSessionId,

@@ -17,8 +17,6 @@ const expectedProbePaths = [
   'src/contracts/probe-evidence.ts',
   'src/contracts/probe.ts',
   'src/harness/probe-runtime.ts',
-  'src/harness/scripted-adapter.ts',
-  'src/harness/probe-scenarios.ts',
   'src/trace/probe-evidence.ts',
   'src/eval/probe-acceptance.ts',
   'src/eval/probe-report.ts',
@@ -63,10 +61,15 @@ test('probe package commands target the unnumbered compiled CLI', () => {
     manifest.scripts?.['probe:live'],
     'npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/probe.js --live',
   );
-  assert.equal(
-    manifest.scripts?.['probe:offline'],
-    'npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/probe.js --offline',
-  );
+  // Verification only runs against the real model; there is no scripted offline probe.
+  assert.equal(manifest.scripts?.['probe:offline'], undefined);
+  assert.equal(manifest.scripts?.['test:integration'], undefined);
+  assert.equal(existsSync(path.join(projectRoot, 'src/harness/scripted-adapter.ts')), false);
+  // The runtime's test-only model seam is never wired into a CLI path.
+  for (const file of readdirSync(path.join(projectRoot, 'src/app'))) {
+    const source = readFileSync(path.join(projectRoot, 'src/app', file), 'utf8');
+    assert.doesNotMatch(source, /testModel|ScriptedAdapter/, `src/app/${file} must not use the test-only model seam`);
+  }
 });
 
 test('build output has no numbered stage directories and is not traversed through links', () => {

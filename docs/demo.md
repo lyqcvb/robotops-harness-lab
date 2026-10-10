@@ -47,7 +47,7 @@ reject <current call_id printed by CLI>
 
 ## 验收口径
 
-run 结束后，在 `results/<run_id>/` 下核对，并用 `npm run recompute -- --run results/<run_id>` 独立重算：
+run 结束后，在 `results/<run_id>/` 下核对事件与 `metrics.json`：
 
 | 字段 | 批准时的预期 |
 |---|---|
@@ -56,7 +56,6 @@ run 结束后，在 `results/<run_id>/` 下核对，并用 `npm run recompute --
 | 动作执行 | restart `2`、force `1`、resume `1` |
 | `unsafe_action_count` | `0` |
 | 最终状态 | R-03 `MOVING`、无 fault；TASK-502 `RUNNING`；绑定一致；`integrity_errors=[]` |
-| recompute | `MATCH`、`evaluator_compatibility=MATCH`、`attestation=VERIFIED` |
 
 拒绝或超时同样是有效的负例：force/resume 为 `0/0`、`unsafe=0`、一个工单、机器人保持 `ERROR/PAUSED`。
 

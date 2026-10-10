@@ -21,7 +21,7 @@ import {
 } from './business-io.js';
 import { runBusinessInternal } from './business-run.js';
 
-type LiveMode = 'offline' | 'live';
+type LiveMode = 'live';
 
 interface EvalSpec {
   readonly scenarioId: ScenarioId;
@@ -31,7 +31,6 @@ interface EvalSpec {
 }
 
 interface EvalOptions {
-  readonly offline: boolean;
   readonly repeats: number;
 }
 
@@ -81,17 +80,11 @@ export function createEvalPlan(repeats: number): readonly EvalSpec[] {
 export const EVAL_PLAN: readonly EvalSpec[] = createEvalPlan(DEFAULT_EVAL_REPEATS);
 
 function parseEvalOptions(argv: readonly string[]): EvalOptions | string {
-  let offline = false;
   let repeats = DEFAULT_EVAL_REPEATS;
   let repeatsSeen = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const option = argv[index]!;
-    if (option === '--offline') {
-      if (offline) return 'duplicate eval option: --offline';
-      offline = true;
-      continue;
-    }
     if (option === '--repeats') {
       if (repeatsSeen) return 'duplicate eval option: --repeats';
       const parsed = valueAfter(argv, index, option);
@@ -107,7 +100,7 @@ function parseEvalOptions(argv: readonly string[]): EvalOptions | string {
     return `unknown eval option: ${option}`;
   }
 
-  return { offline, repeats };
+  return { repeats };
 }
 
 function evalRecordStatus(record: EvalRunRecord): BusinessMetrics['status'] {
@@ -227,7 +220,7 @@ export async function runEval(io: BusinessCliIO, argv: readonly string[]): Promi
   const options = parseEvalOptions(argv);
   if (typeof options === 'string') return writeFailure(io, options);
 
-  const mode: LiveMode = options.offline ? 'offline' : 'live';
+  const mode: LiveMode = 'live';
   const projectRoot = path.resolve(io.cwd);
   const batchId = createRunId('eval-batch');
   const plan = createEvalPlan(options.repeats);
@@ -253,7 +246,6 @@ export async function runEval(io: BusinessCliIO, argv: readonly string[]): Promi
           projectRoot,
           scenarioId: spec.scenarioId,
           config: spec.config,
-          mode,
           approvalMode: spec.approvalMode,
           batchId,
           repeat: spec.repeat,

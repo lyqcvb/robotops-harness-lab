@@ -8,9 +8,7 @@ RobotOps Harness Lab
 
 ## 二、项目定位
 
-这是一个面向求职展示的 Agent Harness 产品验证项目。
-
-项目目标不是开发完整机器人平台，也不是研究机器人运动控制，而是验证：
+RobotOps Harness Lab 是一个 Agent Harness 产品验证项目，用于验证：
 
 > DeepSeek Harness 作为 Agent Runtime，是否适合机器人智能服务与企业内部系统协作场景。
 
@@ -83,3 +81,4 @@ RobotOps Harness Lab
 任务成功
 ↓
 保存完整 Trace
+```

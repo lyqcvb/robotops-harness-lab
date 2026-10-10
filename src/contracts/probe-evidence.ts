@@ -1,4 +1,4 @@
-export type VerificationKind = 'static' | 'offline' | 'live';
+export type VerificationKind = 'static' | 'live';
 export type GateStatus = 'PASS' | 'FAIL' | 'BLOCKED' | 'NOT_RUN';
 
 export interface GateEvidence {
@@ -36,7 +36,7 @@ export interface ProbeSummary {
   readonly harnessVersion: string;
   readonly installedVersions: Readonly<Record<string, string>>;
   readonly lockfileSha256: string;
-  readonly mode: 'offline' | 'live';
+  readonly mode: 'live';
   readonly status: GateStatus;
   readonly stage0Complete: boolean;
   readonly gates: readonly GateEvidence[];

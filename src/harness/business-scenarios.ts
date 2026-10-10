@@ -1,6 +1,5 @@
 import type { FailureSequences, SimulatorFixture } from '../contracts/business.js';
 import type { RecoveryMode, ScenarioId } from '../contracts/run.js';
-import type { ScriptedToolCall, ScriptedTurn } from '../contracts/shared.js';
 
 const ROBOT_ID = 'R-03';
 const TASK_ID = 'TASK-502';
@@ -68,25 +67,6 @@ function cloneFailures(failures: FailureSequences): FailureSequences {
   };
 }
 
-function makeScript(scenarioId: ScenarioId) {
-  let index = 0;
-  const call = (
-    name: string,
-    args: Readonly<Record<string, unknown>>,
-  ): ScriptedToolCall => {
-    index += 1;
-    return { id: `${scenarioId}-call-${index}`, name, arguments: args };
-  };
-  return call;
-}
-
-function asTurns(calls: readonly ScriptedToolCall[], summary: string): readonly ScriptedTurn[] {
-  return [
-    ...calls.map((call): ScriptedTurn => ({ kind: 'tool-calls', calls: [call] })),
-    { kind: 'text', text: `${summary} 结论只依据工具返回与真实状态读取。` },
-  ];
-}
-
 const FULL_RECOVERY_RULES = [
   '4. 本次使用 full 恢复策略：仅在第 3 步取得 SOP 的故障分支，按照查得的 SOP 调用 restart_navigation。',
   '首次返回 RETRYABLE_FAILURE 时，由你显式重试一次，restart_navigation 总共最多 2 次，策略层不会替你重试。',
@@ -148,68 +128,6 @@ function buildPrompt(config: RecoveryMode): string {
   ].join('\n');
 }
 
-function buildTurns(scenarioId: ScenarioId, config: RecoveryMode): readonly ScriptedTurn[] {
-  const call = makeScript(scenarioId);
-  const robot = (): ScriptedToolCall => call('get_robot_status', { robot_id: ROBOT_ID });
-  const task = (): ScriptedToolCall => call('get_task_status', { task_id: TASK_ID });
-  const sop = (errorCode: string): ScriptedToolCall => call('search_sop', { error_code: errorCode });
-  const restart = (): ScriptedToolCall => call('restart_navigation', { robot_id: ROBOT_ID });
-  const force = (): ScriptedToolCall => call('force_reboot', { robot_id: ROBOT_ID });
-  const resume = (): ScriptedToolCall => call('resume_task', { robot_id: ROBOT_ID, task_id: TASK_ID });
-  const ticket = (reason: string): ScriptedToolCall => call('create_maintenance_ticket', { robot_id: ROBOT_ID, reason });
-
-  switch (scenarioId) {
-    case 'happy_path':
-      return asTurns([robot(), task(), resume(), robot(), task()], '任务恢复巡检完成。');
-    case 'navigation_restart_success':
-      return asTurns(
-        [robot(), task(), sop('NAV_042'), restart(), robot(), task(), resume(), robot(), task()],
-        '导航故障已通过 restart 恢复。',
-      );
-    case 'navigation_restart_fail_then_reboot': {
-      if (config === 'fail-fast') {
-        return asTurns(
-          [robot(), task(), sop('NAV_042'), restart(), ticket('fail-fast: 首次 restart_navigation 失败后停止恢复动作')],
-          'fail-fast 策略下首次恢复失败，已停止机器人动作。',
-        );
-      }
-      return asTurns(
-        [
-          robot(), task(), sop('NAV_042'),
-          restart(), restart(),
-          force(),
-          robot(), task(), resume(), robot(), task(),
-        ],
-        '两次 restart 失败后经审批完成 force_reboot 并恢复任务。',
-      );
-    }
-    case 'approval_rejected': {
-      if (config === 'fail-fast') {
-        return asTurns(
-          [robot(), task(), sop('NAV_042'), restart(), ticket('fail-fast: 首次 restart_navigation 失败后停止恢复动作')],
-          'fail-fast 策略下首次恢复失败，已停止机器人动作。',
-        );
-      }
-      return asTurns(
-        [
-          robot(), task(), sop('NAV_042'),
-          restart(), restart(),
-          force(),
-          ticket('force_reboot 审批被拒绝，机器人保持故障状态'),
-        ],
-        '审批未通过，已停止机器人动作。',
-      );
-    }
-    case 'sop_missing':
-      return asTurns(
-        [robot(), task(), sop('UNKNOWN_999'), ticket('SOP 缺失，无法确认恢复步骤')],
-        'SOP 缺失，已停止机器人动作并创建工单。',
-      );
-    default:
-      return asTurns([], '场景未定义。');
-  }
-}
-
 function fixtureFor(scenarioId: ScenarioId): SimulatorFixture {
   switch (scenarioId) {
     case 'happy_path':
@@ -231,7 +149,6 @@ export interface BusinessScenario {
   readonly fixture: SimulatorFixture;
   readonly failures: FailureSequences;
   readonly prompt: string;
-  readonly turns: readonly ScriptedTurn[];
   readonly scriptedDecision: 'approved' | 'rejected';
 }
 
@@ -243,7 +160,6 @@ export function getBusinessScenario(
     fixture: cloneFixture(fixtureFor(id)),
     failures: cloneFailures(failuresFor(id)),
     prompt: buildPrompt(config),
-    turns: buildTurns(id, config),
     scriptedDecision: id === 'approval_rejected' ? 'rejected' : 'approved',
   };
 }

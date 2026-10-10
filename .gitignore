@@ -12,8 +12,7 @@ yarn-error.log*
 # Generated run artifacts.
 #
 # `evidence/` and `results/` are produced by this project's own commands
-# (`npm run eval`, `npm run test:integration`, `npm run demo`, `npm run probe:*`)
-# and are tied to the evaluator revision that wrote them. They are regenerated,
-# never committed: `npm run recompute` re-verifies whatever the current code produced.
+# (`npm run eval`, `npm run test:e2e`, `npm run demo`, `npm run probe:live`)
+# and are tied to the code revision that wrote them. They are regenerated, never committed.
 evidence/
 results/

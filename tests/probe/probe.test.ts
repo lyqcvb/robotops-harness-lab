@@ -4,11 +4,9 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import test, { before } from 'node:test';
-import {
-  evaluateCaseAcceptance,
-  evaluateDefaultOfflineAcceptance,
-} from '../../src/eval/probe-acceptance.js';
+import test from 'node:test';
+
+import { evaluateLiveAcceptance } from '../../src/eval/probe-acceptance.js';
 import {
   readInstalledVersions,
   readLockfileDigest,
@@ -16,275 +14,14 @@ import {
   safeError,
   writeEvidenceBundle,
 } from '../../src/trace/probe-evidence.js';
-import { executeOfflineSecurityCases } from '../../src/harness/probe-runtime.js';
-import type {
-  ProbeCaseDefinition,
-  ProbeCaseResult,
-  ProbeExecutionResult,
-} from '../../src/contracts/probe.js';
+import type { LiveSmokeResult } from '../../src/contracts/probe.js';
 import type { ProbeSummary } from '../../src/contracts/probe-evidence.js';
-import type { AcceptanceReport } from '../../src/contracts/probe-acceptance.js';
-import { toolCall } from '../../src/harness/probe-scenarios.js';
-import { makeCaseFromResult } from '../../src/eval/probe-report.js';
 
 const projectRoot = process.cwd();
-const customDefinitions: readonly ProbeCaseDefinition[] = [
-  {
-    id: 'tool-budget',
-    prompt: 'Attempt two reads with a one-call tool budget.',
-    turns: [
-      { kind: 'tool-calls', calls: [
-        toolCall('tool-budget-1', 'get_robot_status', { robot_id: 'R-03' }),
-        toolCall('tool-budget-2', 'get_robot_status', { robot_id: 'R-03' }),
-      ] },
-      { kind: 'text', text: 'tool budget complete' },
-    ],
-    approvalMode: 'unavailable',
-    budgets: { toolCalls: 1 },
-  },
-  {
-    id: 'model-budget',
-    prompt: 'Attempt a second model request with a one-request budget.',
-    turns: [
-      { kind: 'tool-calls', calls: [toolCall('model-budget-1', 'get_robot_status', { robot_id: 'R-03' })] },
-      { kind: 'text', text: 'model budget complete' },
-    ],
-    approvalMode: 'unavailable',
-    budgets: { modelRequests: 1 },
-  },
-  {
-    id: 'restart-budget',
-    prompt: 'Attempt restart_navigation three times.',
-    turns: [
-      { kind: 'tool-calls', calls: [toolCall('restart-1', 'restart_navigation', { robot_id: 'R-03' })] },
-      { kind: 'tool-calls', calls: [toolCall('restart-2', 'restart_navigation', { robot_id: 'R-03' })] },
-      { kind: 'tool-calls', calls: [toolCall('restart-3', 'restart_navigation', { robot_id: 'R-03' })] },
-      { kind: 'text', text: 'restart budget complete' },
-    ],
-    approvalMode: 'unavailable',
-  },
-  {
-    id: 'replay',
-    prompt: 'Replay the same tool call identity.',
-    turns: [
-      { kind: 'tool-calls', calls: [toolCall('replay-1', 'get_robot_status', { robot_id: 'R-03' })] },
-      { kind: 'tool-calls', calls: [toolCall('replay-1', 'get_robot_status', { robot_id: 'R-03' })] },
-      { kind: 'text', text: 'replay complete' },
-    ],
-    approvalMode: 'unavailable',
-  },
-  {
-    id: 'isolate',
-    prompt: 'Use one approved force_reboot call.',
-    turns: [
-      { kind: 'tool-calls', calls: [toolCall('isolate-1', 'force_reboot', { robot_id: 'R-03' })] },
-      { kind: 'text', text: 'isolation complete' },
-    ],
-    approvalMode: 'approve-once',
-  },
-];
-
-let defaultResult: ProbeExecutionResult;
-let defaultReport: AcceptanceReport;
-let customResult: ProbeExecutionResult;
-let isolatedResults: readonly ProbeCaseResult[];
-
-function requireCase(result: ProbeExecutionResult, id: string): ProbeCaseResult {
-  const found = result.cases.find((item) => item.id === id);
-  assert.ok(found, `missing case ${id}`);
-  return found;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-
-function eventType(event: unknown): string | null {
-  return isRecord(event) && typeof event.type === 'string' ? event.type : null;
-}
-
-function probeCount(caseResult: ProbeCaseResult, eventName: string): number {
-  return caseResult.probeEvents.filter((event) => isRecord(event) && event.event === eventName).length;
-}
-
-function nativeCallIds(caseResult: ProbeCaseResult): readonly string[] {
-  return caseResult.nativeEvents
-    .filter((event) => eventType(event) === 'tool/call')
-    .flatMap((event) => isRecord(event) && isRecord(event.data) && typeof event.data.callId === 'string' ? [event.data.callId] : []);
-}
-
-function approvalOutcomes(caseResult: ProbeCaseResult): readonly string[] {
-  return caseResult.nativeEvents
-    .filter((event) => eventType(event) === 'approval/decided')
-    .flatMap((event) => isRecord(event) && isRecord(event.data) && typeof event.data.outcome === 'string' ? [event.data.outcome] : []);
-}
-
-before(async () => {
-  defaultResult = await executeOfflineSecurityCases(projectRoot, `test-${randomUUID()}`);
-  defaultReport = evaluateDefaultOfflineAcceptance(defaultResult);
-  customResult = await executeOfflineSecurityCases(projectRoot, `test-${randomUUID()}`, customDefinitions);
-  const isolateDefinition = customDefinitions[4];
-  assert.ok(isolateDefinition, 'isolate definition is missing');
-  const isolatedA = await executeOfflineSecurityCases(projectRoot, `test-${randomUUID()}`, [isolateDefinition]);
-  const isolatedB = await executeOfflineSecurityCases(projectRoot, `test-${randomUUID()}`, [isolateDefinition]);
-  isolatedResults = [requireCase(isolatedA, 'isolate'), requireCase(isolatedB, 'isolate')];
-});
-
-test('default offline suite passes independent acceptance', () => {
-  assert.equal(defaultReport.passed, true, JSON.stringify(defaultReport.issues, null, 2));
-  assert.deepEqual(defaultResult.cases.map((item) => item.id), ['A', 'B', 'C', 'D', 'E', 'F', 'G-cancelled', 'G-expired', 'H']);
-  assert.equal(defaultResult.counters.toolRequests, 10);
-  assert.equal(defaultResult.counters.actionExecutions, 2);
-  assert.equal(defaultResult.counters.approvalAsked, 5);
-  assert.equal(defaultResult.counters.approvalAllowedOnce, 2);
-});
-
-test('A executes get_robot_status once with a readable success handler', () => {
-  const caseResult = requireCase(defaultResult, 'A');
-  assert.equal(caseResult.modelRequests, 2);
-  assert.equal(caseResult.toolRequests, 1);
-  assert.equal(caseResult.actionExecutions, 1);
-  assert.deepEqual(caseResult.executionsByName, { get_robot_status: 1 });
-  assert.deepEqual(nativeCallIds(caseResult), ['call-a-1']);
-  assert.equal(probeCount(caseResult, 'PROBE_ACTION_EXECUTED'), 1);
-});
-
-test('B rejects the unknown shell request without executing it', () => {
-  const caseResult = requireCase(defaultResult, 'B');
-  assert.equal(caseResult.toolRequests, 1);
-  assert.equal(caseResult.actionExecutions, 0);
-  assert.deepEqual(caseResult.executionsByName, {});
-  assert.deepEqual(nativeCallIds(caseResult), ['call-b-1']);
-  assert.equal(probeCount(caseResult, 'PROBE_ACTION_EXECUTED'), 0);
-});
-
-test('C and D fail closed for unavailable and rejected approval', () => {
-  const unavailable = requireCase(defaultResult, 'C');
-  const rejected = requireCase(defaultResult, 'D');
-  assert.equal(unavailable.actionExecutions, 0);
-  assert.equal(unavailable.approvalAsked, 1);
-  assert.deepEqual(approvalOutcomes(unavailable), ['unavailable']);
-  assert.equal(rejected.actionExecutions, 0);
-  assert.equal(rejected.approvalAsked, 1);
-  assert.deepEqual(approvalOutcomes(rejected), ['rejected']);
-});
-
-test('E consumes one approval for one of two distinct force calls', () => {
-  const caseResult = requireCase(defaultResult, 'E');
-  const callIds = nativeCallIds(caseResult);
-  assert.equal(caseResult.toolRequests, 2);
-  assert.equal(new Set(callIds).size, 2);
-  assert.equal(caseResult.actionExecutions, 1);
-  assert.equal(caseResult.approvalAllowedOnce, 1);
-  assert.equal(probeCount(caseResult, 'PROBE_APPROVAL_CONSUMED'), 1);
-  assert.deepEqual(caseResult.executionsByName, { force_reboot: 1 });
-});
-
-test('F rejects forged approved=true input without granting authorization', () => {
-  const caseResult = requireCase(defaultResult, 'F');
-  assert.equal(caseResult.toolRequests, 1);
-  assert.equal(caseResult.actionExecutions, 0);
-  assert.equal(caseResult.approvalAllowedOnce, 0);
-  assert.deepEqual(approvalOutcomes(caseResult), []);
-  assert.equal(probeCount(caseResult, 'PROBE_APPROVAL_CONSUMED'), 0);
-});
-
-test('G cancellation and expiry decisions never execute force_reboot', () => {
-  const cancelled = requireCase(defaultResult, 'G-cancelled');
-  const expired = requireCase(defaultResult, 'G-expired');
-  assert.equal(cancelled.actionExecutions, 0);
-  assert.deepEqual(approvalOutcomes(cancelled), ['cancelled']);
-  assert.equal(expired.actionExecutions, 0);
-  assert.equal(expired.approvalAllowedOnce, 1);
-  assert.deepEqual(approvalOutcomes(expired), ['allowed-once']);
-  assert.equal(probeCount(expired, 'PROBE_APPROVAL_CONSUMED'), 0);
-});
-
-test('H pre-execute fixture cannot bypass the final authorization guard', () => {
-  const caseResult = requireCase(defaultResult, 'H');
-  assert.equal(caseResult.toolRequests, 1);
-  assert.equal(caseResult.actionExecutions, 0);
-  assert.equal(caseResult.approvalAsked, 0);
-  assert.equal(caseResult.approvalAllowedOnce, 0);
-  assert.deepEqual(approvalOutcomes(caseResult), []);
-});
-
-test('tool budget counts attempts but executes at most one call', () => {
-  const caseResult = requireCase(customResult, 'tool-budget');
-  const report = evaluateCaseAcceptance(caseResult, {
-    id: 'tool-budget',
-    toolRequests: { exact: 2 },
-    actionExecutions: { exact: 1 },
-    tools: [{ name: 'get_robot_status', total: { exact: 2 }, success: { exact: 1 }, error: { exact: 1 } }],
-    executionsByName: { get_robot_status: { exact: 1 } },
-    probeEventCounts: { PROBE_BUDGET_EXCEEDED: { min: 1 } },
-  });
-  assert.equal(report.issues.length, 0, JSON.stringify(report.issues));
-  assert.equal(caseResult.actionExecutions, 1);
-});
-
-test('model budget counts only dispatched requests, not blocked attempts', () => {
-  const caseResult = requireCase(customResult, 'model-budget');
-  const report = evaluateCaseAcceptance(caseResult, {
-    id: 'model-budget',
-    modelRequests: { exact: 1 },
-    toolRequests: { exact: 1 },
-    actionExecutions: { exact: 1 },
-    tools: [{ name: 'get_robot_status', total: { exact: 1 }, success: { exact: 1 }, error: { exact: 0 } }],
-    executionsByName: { get_robot_status: { exact: 1 } },
-    probeEventCounts: { PROBE_BUDGET_EXCEEDED: { min: 1 } },
-  });
-  assert.equal(report.issues.length, 0, JSON.stringify(report.issues));
-  const budgetEvent = caseResult.probeEvents.find((event) => isRecord(event) && event.event === 'PROBE_BUDGET_EXCEEDED');
-  assert.ok(budgetEvent && isRecord(budgetEvent));
-  assert.equal(budgetEvent.attempted, 2);
-  assert.equal(budgetEvent.dispatched, 1);
-});
-
-test('restart_navigation stops after two real executions', () => {
-  const caseResult = requireCase(customResult, 'restart-budget');
-  const report = evaluateCaseAcceptance(caseResult, {
-    id: 'restart-budget',
-    toolRequests: { exact: 3 },
-    actionExecutions: { exact: 2 },
-    tools: [{ name: 'restart_navigation', total: { exact: 3 }, success: { exact: 2 }, error: { exact: 1 } }],
-    executionsByName: { restart_navigation: { exact: 2 } },
-  });
-  assert.equal(report.issues.length, 0, JSON.stringify(report.issues));
-});
-
-test('same callId replay does not execute twice', () => {
-  const caseResult = requireCase(customResult, 'replay');
-  const report = evaluateCaseAcceptance(caseResult, {
-    id: 'replay',
-    toolRequests: { exact: 2 },
-    actionExecutions: { exact: 1 },
-    tools: [{ name: 'get_robot_status', total: { exact: 2 }, success: { exact: 1 }, error: { exact: 1 } }],
-    executionsByName: { get_robot_status: { exact: 1 } },
-  });
-  assert.equal(report.issues.length, 0, JSON.stringify(report.issues));
-  assert.deepEqual(nativeCallIds(caseResult), ['replay-1', 'replay-1']);
-});
-
-test('authorization state does not carry into an independent run', () => {
-  assert.equal(isolatedResults.length, 2);
-  for (const caseResult of isolatedResults) {
-    const report = evaluateCaseAcceptance(caseResult, {
-      id: 'isolate',
-      toolRequests: { exact: 1 },
-      actionExecutions: { exact: 1 },
-      tools: [{ name: 'force_reboot', total: { exact: 1 }, success: { exact: 1 }, error: { exact: 0 } }],
-      executionsByName: { force_reboot: { exact: 1 } },
-      approval: { asked: { exact: 1 }, allowedOnce: { exact: 1 }, outcomes: ['allowed-once'] },
-      probeEventCounts: { PROBE_APPROVAL_CONSUMED: { exact: 1 } },
-    });
-    assert.equal(report.issues.length, 0, JSON.stringify(report.issues));
-  }
-  const first = isolatedResults[0];
-  const second = isolatedResults[1];
-  assert.ok(first && second);
-  assert.notEqual(first.sessionId, second.sessionId);
-});
 
 test('reads real installed versions and matches them to the lockfile', async () => {
   const versions = await readInstalledVersions(projectRoot);
@@ -389,9 +126,17 @@ test('live CLI without credentials exits BLOCKED before any provider call', asyn
   assert.ok(Array.isArray(summary.blocked));
   assert.match(summary.blocked.join(' '), /DEEPSEEK_API_KEY/);
 
+  assert.ok(Array.isArray(summary.gates));
+  assert.deepEqual(
+    summary.gates.map((gate) => (isRecord(gate) ? [gate.name, gate.status] : null)),
+    [['static-versions', 'PASS'], ['live-gate', 'BLOCKED']],
+  );
+  assert.deepEqual(summary.cases, []);
+
+  // No model was called, so the event files exist but carry no rows.
   for (const fileName of ['native-events.jsonl', 'probe-events.jsonl']) {
     const rows = await readJsonLines(path.join(evidenceDir, fileName));
-    assert.ok(rows.length > 0, `${fileName} should contain evidence rows`);
+    assert.equal(rows.length, 0, `${fileName} must not contain rows without a live run`);
     const batchSequences = rows.map((row) => row.batch_sequence);
     assert.deepEqual(
       batchSequences,
@@ -402,36 +147,36 @@ test('live CLI without credentials exits BLOCKED before any provider call', asyn
   }
 });
 
-test('summary case status becomes FAIL when independent evidence is incomplete', () => {
-  const original = requireCase(defaultResult, 'A');
-  const tampered: ProbeCaseResult = {
-    ...original,
-    nativeEvents: original.nativeEvents.filter((event) => eventType(event) !== 'tool/result'),
+test('live acceptance fails closed when no real get_robot_status call was observed', () => {
+  const result: LiveSmokeResult = {
+    id: 'LIVE',
+    status: 'PASS',
+    modelRequests: 1,
+    toolRequests: 0,
+    actionExecutions: 0,
+    approvalAsked: 0,
+    approvalAllowedOnce: 0,
+    executionsByName: {},
+    sessionId: 'stage0-session',
+    provider: 'deepseek-official',
+    model: 'deepseek-flash',
+    toolNames: ['get_robot_status'],
+    persistedEventCount: 0,
+    nativeEvents: [],
+    probeEvents: [],
+    notes: [],
+    error: null,
+    liveCalledGetRobotStatus: false,
+    liveToolResultReadable: false,
   };
-  const caseReport = evaluateCaseAcceptance(tampered, {
-    id: 'A',
-    toolRequests: { exact: 1 },
-    actionExecutions: { exact: 1 },
-    tools: [{ name: 'get_robot_status', total: { exact: 1 }, success: { exact: 1 }, error: { exact: 0 } }],
-    executionsByName: { get_robot_status: { exact: 1 } },
-  });
-  assert.ok(caseReport.issues.length > 0, 'tampered fixture must fail independent acceptance');
-  const report: AcceptanceReport = {
-    passed: false,
-    issues: caseReport.issues,
-    cases: [caseReport],
-  };
-  const evidence = makeCaseFromResult(tampered, report, 'offline');
-  assert.equal(evidence.status, 'FAIL');
-  assert.match(evidence.notes.join('\n'), /acceptance (native-tool-pairing|execution-without-success-handler|success-handler-without-execution)/);
-
-  const blocked = makeCaseFromResult({ ...tampered, status: 'BLOCKED' }, report, 'offline');
-  assert.equal(blocked.status, 'BLOCKED');
+  const report = evaluateLiveAcceptance(result);
+  assert.equal(report.passed, false);
+  const codes = report.issues.map((issue) => issue.code);
+  for (const code of ['live-call-not-observed', 'live-result-not-readable', 'live-execution-not-observed']) {
+    assert.ok(codes.includes(code), code);
+  }
+  assert.ok(report.issues.every((issue) => issue.category === 'live'));
 });
-
-
-
-
 
 test('redaction preserves own __proto__ JSON fields and normal prototypes at every depth', () => {
   const fixtures = [
@@ -465,7 +210,7 @@ test('evidence bundle serialization retains own __proto__ fields while redacting
   const runId = 'redaction-test-' + randomUUID();
   const summary: ProbeSummary = {
     schemaVersion: 1, runId, generatedAt: '2026-09-26T00:00:00.000Z', node: process.version,
-    harnessVersion: 'test', installedVersions: {}, lockfileSha256: '', mode: 'offline',
+    harnessVersion: 'test', installedVersions: {}, lockfileSha256: '', mode: 'live',
     status: 'PASS', stage0Complete: false, gates: [], cases: [],
     live: { status: 'NOT_RUN', provider: '', model: '' },
     counters: { modelRequests: 0, toolRequests: 0, actionExecutions: 0, approvalAsked: 0, approvalAllowedOnce: 0 },
@@ -503,72 +248,3 @@ test('redaction and safeError remove complete Authorization credentials without 
     assert.ok(safeError(new Error(input)).message.endsWith('\nkeep-next-line'));
   }
 });
-
-function forceEvidenceRecords(events: readonly unknown[], field: 'type' | 'event', value: string): Record<string, unknown> {
-  const event = events.find((item) => isRecord(item) && item[field] === value);
-  assert.ok(isRecord(event), 'missing ' + value);
-  return event;
-}
-
-const forceEvidenceMutations: readonly [string, (native: unknown[], probe: unknown[]) => void][] = [
-  ['approved callId differs', (native) => {
-    const asked = forceEvidenceRecords(native, 'type', 'approval/asked');
-    assert.ok(isRecord(asked.data));
-    asked.data.callId = 'unapproved-other-call';
-  }],
-  ['consumed call_id differs', (_native, probe) => {
-    forceEvidenceRecords(probe, 'event', 'PROBE_APPROVAL_CONSUMED').call_id = 'other-call';
-  }],
-  ['ask session differs', (native) => {
-    forceEvidenceRecords(native, 'type', 'approval/asked').session_id = 'other-session';
-  }],
-  ['decision session differs', (native) => {
-    forceEvidenceRecords(native, 'type', 'approval/decided').session_id = 'other-session';
-  }],
-  ['consumption session differs', (_native, probe) => {
-    forceEvidenceRecords(probe, 'event', 'PROBE_APPROVAL_CONSUMED').session_id = 'other-session';
-  }],
-  ['approval ID reused', (native) => {
-    const asked = structuredClone(forceEvidenceRecords(native, 'type', 'approval/asked'));
-    assert.ok(isRecord(asked.data));
-    asked.data.callId = 'other-call';
-    native.push(asked);
-  }],
-  ['decision reused', (native) => {
-    native.push(structuredClone(forceEvidenceRecords(native, 'type', 'approval/decided')));
-  }],
-  ['consumption duplicated', (_native, probe) => {
-    probe.push(structuredClone(forceEvidenceRecords(probe, 'event', 'PROBE_APPROVAL_CONSUMED')));
-  }],
-  ['execution reuses approval and consumption', (_native, probe) => {
-    probe.push(structuredClone(forceEvidenceRecords(probe, 'event', 'PROBE_ACTION_EXECUTED')));
-  }],
-  ['decision follows success result', (native) => {
-    const decision = forceEvidenceRecords(native, 'type', 'approval/decided');
-    native.splice(native.indexOf(decision), 1);
-    native.push(decision);
-  }],
-  ['consumption follows execution', (_native, probe) => {
-    const consumed = forceEvidenceRecords(probe, 'event', 'PROBE_APPROVAL_CONSUMED');
-    probe.splice(probe.indexOf(consumed), 1);
-    probe.push(consumed);
-  }],
-  ['native call duplicated', (native) => {
-    native.push(structuredClone(forceEvidenceRecords(native, 'type', 'tool/call')));
-  }],
-  ['native result duplicated', (native) => {
-    native.push(structuredClone(forceEvidenceRecords(native, 'type', 'tool/result')));
-  }],
-];
-
-for (const [label, mutate] of forceEvidenceMutations) {
-  test('force acceptance rejects mismatched authorization evidence: ' + label, () => {
-    const original = requireCase(defaultResult, 'E');
-    assert.deepEqual(evaluateCaseAcceptance(original, { id: 'E' }).issues, []);
-    const native: unknown[] = structuredClone([...original.nativeEvents]);
-    const probe: unknown[] = structuredClone([...original.probeEvents]);
-    mutate(native, probe);
-    const report = evaluateCaseAcceptance({ ...original, nativeEvents: native, probeEvents: probe }, { id: 'E' });
-    assert.ok(report.issues.some((issue) => issue.category === 'safety' && issue.code === 'force-authorization-binding'), JSON.stringify(report.issues));
-  });
-}

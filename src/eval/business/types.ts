@@ -29,6 +29,7 @@ export interface EventView {
 export interface NativeView {
   readonly index: number;
   readonly type: string;
+  readonly timeMs: number | null;
   readonly data: JsonRecord;
 }
 

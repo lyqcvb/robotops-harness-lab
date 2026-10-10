@@ -1,15 +1,11 @@
 import process from 'node:process';
 
-import { evaluateDefaultOfflineAcceptance, evaluateLiveAcceptance } from '../eval/probe-acceptance.js';
+import { evaluateLiveAcceptance } from '../eval/probe-acceptance.js';
 import { buildSummary, issueDetail } from '../eval/probe-report.js';
 import type { AcceptanceReport } from '../contracts/probe-acceptance.js';
 import type { GateEvidence, GateStatus, LiveEvidence } from '../contracts/probe-evidence.js';
-import type { LiveSmokeResult, ProbeExecutionResult, SafeError } from '../contracts/probe.js';
-import {
-  executeLiveSmoke,
-  executeOfflineSecurityCases,
-  modelFromEnvironment,
-} from '../harness/probe-runtime.js';
+import type { LiveSmokeResult, SafeError } from '../contracts/probe.js';
+import { executeLiveSmoke, modelFromEnvironment } from '../harness/probe-runtime.js';
 import {
   createRunPaths,
   readInstalledVersions,
@@ -19,14 +15,9 @@ import {
 } from '../trace/probe-evidence.js';
 
 const DEEPSEEK_PROVIDER_ROUTE = 'deepseek-official';
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function annotateCaseSequence(events: readonly unknown[], caseSequence: number): readonly unknown[] {
-  return events.map((event) => isRecord(event)
-    ? { ...event, case_sequence: caseSequence }
-    : { value: event, case_sequence: caseSequence });
 }
 
 function assignBatchSequence(events: readonly unknown[]): readonly unknown[] {
@@ -35,9 +26,13 @@ function assignBatchSequence(events: readonly unknown[]): readonly unknown[] {
     : { value: event, batch_sequence: index + 1 });
 }
 
-export async function runProbeCli(mode: 'offline' | 'live'): Promise<number> {
+/**
+ * Stage 0 probe: a static dependency gate followed by a real-model smoke run. There is
+ * no scripted model path; without DEEPSEEK_API_KEY the live gate is BLOCKED.
+ */
+export async function runProbeCli(): Promise<number> {
   const projectRoot = process.cwd();
-  const paths = createRunPaths(projectRoot, mode);
+  const paths = createRunPaths(projectRoot);
   const configuredKey = process.env.DEEPSEEK_API_KEY;
   const apiKey = configuredKey === undefined ? '' : configuredKey.trim();
   const secrets = apiKey === '' ? [] : [apiKey];
@@ -45,12 +40,8 @@ export async function runProbeCli(mode: 'offline' | 'live'): Promise<number> {
   let installedVersions: Record<string, string> = {};
   let lockfileSha256 = '';
   let envError: SafeError | null = null;
-  let offlineResult: ProbeExecutionResult | undefined;
-  let offlineReport: AcceptanceReport | undefined;
-  let offlineRuntimeError: SafeError | null = null;
   let liveResult: LiveSmokeResult | undefined;
   let liveReport: AcceptanceReport | undefined;
-  let liveError: SafeError | null = null;
   let liveBlockedReason: string | undefined;
   let status: GateStatus = 'BLOCKED';
   let stage0Complete = false;
@@ -67,106 +58,64 @@ export async function runProbeCli(mode: 'offline' | 'live'): Promise<number> {
       blocked.push(`static dependency gate: ${envError.message}`);
     }
 
-    if (envError === null) {
-      try {
-        offlineResult = await executeOfflineSecurityCases(projectRoot, paths.runId);
-        offlineReport = evaluateDefaultOfflineAcceptance(offlineResult);
-      } catch (error) {
-        offlineRuntimeError = safeError(error, secrets);
-        notes.push(`offline runtime failed: ${offlineRuntimeError.message}`);
-      }
-    }
-
     if (envError !== null) {
-      status = 'BLOCKED';
-      exitCode = 2;
-      notes.push('offline and live verification were not run because the static dependency gate is blocked');
-    } else if (offlineRuntimeError !== null || offlineResult === undefined || offlineReport === undefined) {
-      status = 'FAIL';
-      exitCode = 1;
-      notes.push('offline runtime did not return an independently verifiable result');
-    } else if (!offlineReport.passed) {
-      status = 'FAIL';
-      exitCode = 1;
-      notes.push(`offline acceptance failed: ${issueDetail(offlineReport.issues, 'unknown acceptance failure')}`);
-    } else if (mode === 'offline') {
-      status = 'PASS';
-      stage0Complete = false;
-      exitCode = 0;
-      notes.push('offline acceptance passed, but live smoke remains NOT_RUN and Stage 0 is not complete');
+      notes.push('live verification was not run because the static dependency gate is blocked');
+    } else if (apiKey === '') {
+      liveBlockedReason = 'DEEPSEEK_API_KEY is required for live smoke; no provider request was made';
+      blocked.push(liveBlockedReason);
+      notes.push(liveBlockedReason);
     } else {
-      if (apiKey === '') {
-        liveBlockedReason = 'DEEPSEEK_API_KEY is required for live smoke; no provider request was made';
+      let liveError: SafeError | null = null;
+      try {
+        liveResult = await executeLiveSmoke(projectRoot, paths.runId, DEEPSEEK_PROVIDER_ROUTE, model);
+      } catch (error) {
+        liveError = safeError(error, secrets);
+      }
+
+      if (liveError !== null || liveResult === undefined) {
+        liveBlockedReason = liveError === null
+          ? 'live smoke returned no result'
+          : `live smoke was blocked: ${liveError.message}`;
         blocked.push(liveBlockedReason);
-        status = 'BLOCKED';
-        exitCode = 2;
         notes.push(liveBlockedReason);
       } else {
-        try {
-          liveResult = await executeLiveSmoke(projectRoot, paths.runId, DEEPSEEK_PROVIDER_ROUTE, model);
-        } catch (error) {
-          liveError = safeError(error, secrets);
-        }
-
-        if (liveError !== null) {
-          liveBlockedReason = `live smoke was blocked: ${liveError.message}`;
+        liveReport = evaluateLiveAcceptance(liveResult);
+        if (liveResult.status === 'BLOCKED' && liveResult.error !== null) {
+          liveBlockedReason = `live smoke was blocked by the runtime: ${liveResult.error.message}`;
           blocked.push(liveBlockedReason);
-          status = 'BLOCKED';
-          exitCode = 2;
           notes.push(liveBlockedReason);
-        } else if (liveResult === undefined) {
-          liveBlockedReason = 'live smoke returned no result';
-          blocked.push(liveBlockedReason);
-          status = 'BLOCKED';
-          exitCode = 2;
-          notes.push(liveBlockedReason);
+        } else if (liveReport.passed) {
+          status = 'PASS';
+          stage0Complete = true;
+          exitCode = 0;
+          notes.push('live get_robot_status request, readable handler result, and persisted native events were verified');
         } else {
-          liveReport = evaluateLiveAcceptance(liveResult);
-          if (liveResult.status === 'BLOCKED' && liveResult.error !== null) {
-            liveBlockedReason = `live smoke was blocked by the runtime: ${liveResult.error.message}`;
-            blocked.push(liveBlockedReason);
-            status = 'BLOCKED';
-            exitCode = 2;
-            notes.push(liveBlockedReason);
-          } else if (liveReport.passed) {
-            status = 'PASS';
-            stage0Complete = true;
-            exitCode = 0;
-            notes.push('live get_robot_status request, readable handler result, and persisted native events were verified');
-          } else {
-            status = 'FAIL';
-            stage0Complete = false;
-            exitCode = 1;
-            notes.push(`live acceptance failed: ${issueDetail(liveReport.issues, 'unknown live acceptance failure')}`);
-          }
+          status = 'FAIL';
+          exitCode = 1;
+          notes.push(`live acceptance failed: ${issueDetail(liveReport.issues, 'unknown live acceptance failure')}`);
         }
       }
     }
   } catch (error) {
-    offlineRuntimeError = safeError(error, secrets);
+    const unexpected = safeError(error, secrets);
     status = 'FAIL';
     stage0Complete = false;
     exitCode = 1;
-    notes.push(`unexpected CLI failure: ${offlineRuntimeError.message}`);
-
+    notes.push(`unexpected CLI failure: ${unexpected.message}`);
   } finally {
-    const liveStatus: GateStatus = mode === 'offline'
+    const liveStatus: GateStatus = envError !== null
       ? 'NOT_RUN'
-      : envError !== null || offlineRuntimeError !== null || offlineReport === undefined || !offlineReport.passed
-        ? 'NOT_RUN'
-        : liveBlockedReason !== undefined
-          ? 'BLOCKED'
-          : liveReport === undefined
-            ? 'NOT_RUN'
-            : liveReport.passed ? 'PASS' : 'FAIL';
-    const liveDetail = mode === 'offline'
-      ? 'Live smoke was not run in offline mode.'
-      : liveBlockedReason
-        ?? (liveReport === undefined
-          ? 'Live gate was not reached because offline acceptance did not pass.'
-          : liveReport.passed
-            ? 'Real get_robot_status call, readable handler result, and persisted events verified.'
-            : issueDetail(liveReport.issues, 'live acceptance failed'));
+      : liveBlockedReason !== undefined
+        ? 'BLOCKED'
+        : liveReport === undefined
+          ? 'NOT_RUN'
+          : liveReport.passed ? 'PASS' : 'FAIL';
+    const liveDetail = liveBlockedReason
+      ?? (liveReport === undefined
+        ? 'Live gate was not reached.'
+        : liveReport.passed
+          ? 'Real get_robot_status call, readable handler result, and persisted events verified.'
+          : issueDetail(liveReport.issues, 'live acceptance failed'));
     const liveGate: GateEvidence = {
       name: 'live-gate',
       status: liveStatus,
@@ -181,13 +130,9 @@ export async function runProbeCli(mode: 'offline' | 'live'): Promise<number> {
     };
     const summary = buildSummary({
       runId: paths.runId,
-      mode,
       installedVersions,
       lockfileSha256,
       envError,
-      offlineResult,
-      offlineReport,
-      offlineRuntimeError,
       liveResult,
       liveReport,
       liveGate,
@@ -198,26 +143,13 @@ export async function runProbeCli(mode: 'offline' | 'live'): Promise<number> {
       notes,
     });
 
-    const offlineCases = offlineResult?.cases ?? [];
-    const liveCaseSequence = offlineCases.length + 1;
-    const nativeForBatch: unknown[] = [
-      ...offlineCases.flatMap((item, index) => annotateCaseSequence(item.nativeEvents, index + 1)),
-      ...(liveResult === undefined ? [] : annotateCaseSequence(liveResult.nativeEvents, liveCaseSequence)),
-    ];
-    const probeForBatch: unknown[] = [
-      ...offlineCases.flatMap((item, index) => annotateCaseSequence(item.probeEvents, index + 1)),
-      ...(liveResult === undefined ? [] : annotateCaseSequence(liveResult.probeEvents, liveCaseSequence)),
-    ];
-    const nativeEvents = assignBatchSequence(nativeForBatch);
-    const probeEvents = assignBatchSequence(probeForBatch);
-
     let evidenceError: SafeError | null = null;
     try {
       await writeEvidenceBundle({
         projectRoot,
         runId: paths.runId,
-        nativeEvents,
-        probeEvents,
+        nativeEvents: assignBatchSequence(liveResult?.nativeEvents ?? []),
+        probeEvents: assignBatchSequence(liveResult?.probeEvents ?? []),
         summary,
         redactionSecrets: secrets,
       });

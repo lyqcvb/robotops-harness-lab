@@ -389,7 +389,7 @@ test('request gate invalidates older selections and standalone assets follow the
   const html = await readFile(indexSourcePath, 'utf8');
   assert.match(html, /<label class="select-label" for="mode-select">Agent 驱动方式<\/label>/);
   assert.match(html, /<dt>Agent 驱动方式<\/dt>/);
-  assert.match(html, /live 调用真实模型，offline 使用预设脚本；两者均操作模拟器。/);
+  assert.match(html, /所有运行都由真实模型（live）驱动并操作模拟器/);
   assert.doesNotMatch(html, /运行模式|live（在线）|offline（离线）/);
   const css = await readFile(styleSourcePath, 'utf8');
   assert.match(html, /<script type="module" src="\/app\.js"><\/script>/);

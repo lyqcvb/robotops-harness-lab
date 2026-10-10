@@ -2,7 +2,7 @@
   "name": "robotops-harness-lab",
   "version": "0.0.0",
   "private": true,
-  "description": "Robot-operations failure recovery on DeepSeek Harness as an Agent Runtime: seven default-deny tools, out-of-model human approval, and a sealed, independently recomputable evidence chain.",
+  "description": "Robot-operations failure recovery on DeepSeek Harness as an Agent Runtime: seven default-deny tools, out-of-model human approval, and an event-based evidence trail with independent evaluation.",
   "license": "MIT",
   "keywords": [
     "agent-runtime",
@@ -20,13 +20,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src scripts tests --max-warnings=0",
     "test:unit": "npm run build && node --test --test-concurrency=1 \"build/tests/**/*.test.js\"",
-    "test:integration": "npm run build && node --use-env-proxy build/scripts/business.js integration",
     "test:e2e": "npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/business.js e2e",
     "eval": "npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/business.js eval",
     "demo": "npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/business.js demo",
-    "recompute": "npm run build && node build/scripts/business.js recompute",
     "probe:live": "npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/probe.js --live",
-    "probe:offline": "npm run build && node --use-env-proxy --env-file-if-exists=.env build/scripts/probe.js --offline",
     "dashboard": "npm run build && node build/scripts/dashboard.js"
   },
   "dependencies": {

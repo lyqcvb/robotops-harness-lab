@@ -53,7 +53,7 @@ function serializeLines(values: readonly unknown[]): string {
 
 function runManifest(id: string): Record<string, unknown> {
   return {
-    schema_version: 1,
+    schema_version: 3,
     run_id: id,
     created_at: '2026-09-28T00:00:00.000Z',
     scenario_id: 'happy_path',

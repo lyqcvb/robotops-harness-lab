@@ -1,23 +1,23 @@
 # RobotOps Harness Lab 架构约束
 
-> 状态：2026-10-10。代码路径（Stage 0–5）已完成并可离线复现；旧版本评测证据已清理，live 评测与真实 manual Demo 需按当前评测器重新录制（Stage 6–7 为 `IN_PROGRESS`）。本文是跨阶段契约、公共 API/安全边界、评测协议和交付 gate 的唯一维护入口。
+> 状态：2026-10-10。代码路径已完成；项目只保留真实 Agent 验证，离线脚本路径已移除，此前的离线证据不再计入。真实 Agent 评测、Harness 探针与真实 manual Demo 需按当前代码录制（Stage 0、5–7 为 `IN_PROGRESS`）。本文是跨阶段契约、公共 API/安全边界、评测协议和交付 gate 的唯一维护入口。
 
 ## 项目定位与边界
 
 本项目验证一个具体问题：**DeepSeek Harness 作为 Agent Runtime，是否适合跨系统、长流程、可能失败且涉及权限控制的机器人运营任务，并让这些任务更可恢复、更可审计？**
 
-项目只做求职展示所需的小型、可运行、可验证 MVP。首轮目标是验证图中的单一业务流程，不扩展为通用 Agent Framework、完整机器人平台或生产权限系统。
+项目只做小型、可运行、可验证的 MVP。首轮目标是验证图中的单一业务流程，不扩展为通用 Agent Framework、完整机器人平台或生产权限系统。
 
 ### 当前能力边界
 
 | 能力域 | 当前状态 | 边界 |
 |---|---|---|
-| Harness 原生 Loop | 已实现并 live 运行 | 使用官方 `dsh-agent-loop`；不写替代 Loop |
-| 七工具注册、白名单与审批边界 | 已实现并经过 unit/integration/live 验证 | 业务 ToolBoundary + Policy；不是 Stage 0 计数 stub |
+| Harness 原生 Loop | 已实现；live 证据待按当前代码录制 | 使用官方 `dsh-agent-loop`；不写替代 Loop |
+| 七工具注册、白名单与审批边界 | 已实现并经过 unit 验证；真实 Agent 证据待录制 | 业务 ToolBoundary + Policy；不是 Stage 0 计数 stub |
 | 真实 Provider 工具调用 | 已接入；live 证据待按当前评测器重录 | model=`deepseek-flash`；不等同 manual |
 | Session / JSONL | 当前业务 run 记录原生事件与项目业务事件 | Session 只保存模型上下文，不保存 robot/task 真值 |
 | Robot Simulator | 已实现 | 单进程 stateful mock；不是实机或物理仿真 |
-| Services、ToolBoundary、Approval、Trace/Eval | 已实现 | offline integration/eval 可确定性复现；live 证据待重录 |
+| Services、ToolBoundary、Approval、Trace/Eval | 已实现 | unit 覆盖契约与评测器；真实 Agent 证据待录制 |
 | 只读历史 Run 查看器（Dashboard） | 已实现 | 本机 loopback 只读查看 `results/`；不启动模型、不执行动作、不参与审批 |
 | 真实人工审批 Demo | 待重录 | 需用户本人在交互终端运行 `npm run demo`；scripted 不能替代 manual |
 
@@ -51,7 +51,7 @@ flowchart TB
   TICKET --> TICKET_STORE["run-scoped 幂等 Ticket 状态"]
   TOOLS --> TRACE["业务 Trace"]
   LOOP --> NATIVE["原生 Session / JSONL / 事件"]
-  TRACE --> EVAL["独立 Eval / recompute"]
+  TRACE --> EVAL["独立 Eval"]
   NATIVE --> EVAL
 
   classDef native fill:#d8f3dc,stroke:#2d6a4f,color:#1b4332;
@@ -71,27 +71,31 @@ flowchart TB
 | 路径 | 职责 |
 |---|---|
 | `src/app/business.ts` | 兼容 barrel：只 re-export `business-cli.ts`、`business-run.ts`、`business-io.ts` 的入口和类型，不含编排逻辑 |
-| `src/app/business-cli.ts` | `integration/e2e/eval/demo/recompute` 子命令解析与 CLI 编排 |
+| `src/app/business-cli.ts` | `e2e/eval/demo` 子命令解析与 CLI 编排 |
+| `src/app/business-run.ts` | 单个 run 的装配、manifest、未配置 key 时 `BLOCKED`、宿主兜底工单（`runHostCleanup`）与证据落盘 |
+| `src/app/business-io.ts` | CLI 输出、退出码与脱敏密钥收集 |
 | `src/app/business-batch.ts` | eval 批次编排、分组汇总与 `summary.json` 产物 |
-| `src/app/business-recompute.ts` | recompute：默认当前评估器范围，`--run`/`--all` 严格检查 |
 | `src/app/manual-approval.ts` | 真实 TTY、120 秒和精确 `approve/reject <call_id>` |
 | `src/harness/business-runtime.ts` | 原生 Agent/Loop/LLM/Tools/Approval/Session 组合、串行和 retry=0 |
+| `src/harness/runtime-approval.ts`、`src/harness/runtime-support.ts` | 审批决定与回写说明；工具描述、拦截前缀、`DEEPSEEK_BASE_URL` 校验 |
 | `src/harness/business-scenarios.ts` | 五场景 fixture 与状态分支 prompt |
 | `src/services/business-services.ts` | Robot/SOP/Ticket 业务服务与 ServicePort |
-| `src/simulator/robot-simulator.ts` | 六态五态、三动作、故障序列、重置和幂等 |
-| `src/tools/tool-boundary.ts` | 七工具、schema、默认拒绝、预算和调用记录 |
+| `src/simulator/robot-simulator.ts` | 机器人六态与任务五态、三个动作、故障序列、重置和幂等 |
+| `src/tools/tool-boundary.ts`、`src/tools/tool-validation.ts` | 七工具、参数校验、默认拒绝、预算和调用记录 |
 | `src/tools/approval-ledger.ts` | 一次性 ApprovalLedger 与原生 approval 交叉验证 |
 | `src/trace/business-trace.ts`、`src/trace/run-evidence.ts` | 业务事件、manifest、metrics 与不可覆盖 bundle |
-| `src/eval/business-acceptance.ts`、`src/eval/business-report.ts` | 独立判定、重算与差异报告 |
+| `src/eval/business-acceptance.ts`、`src/eval/business-report.ts`、`src/eval/business/*` | 独立判定、批次汇总、证据解析与 token/cost 计算 |
+| `src/contracts/policy.ts`、`src/contracts/pricing.ts` | 默认模型、预算、动作上限、软停止原因；官方峰谷价格与节假日日历 |
 | `src/app/dashboard.ts`、`scripts/dashboard.ts` | 只读 Dashboard 的端口解析、启动与 CLI 入口 |
 | `src/dashboard/server.ts`、`src/dashboard/public/*` | 只读 loopback HTTP 服务与静态前端；不启动模型、不执行动作、不审批 |
+| `tests/support/scripted-adapter.ts` | 仅测试用脚本化模型适配器，经真实原生 Loop 回归运行时与审批链路；CLI 不可达 |
 
 Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享类型在 `src/contracts/shared.ts`，脱敏与环境核对在 `src/trace/redaction.ts`、`src/trace/environment.ts`）：
 
 | 路径 | 职责 |
 |---|---|
 | `src/contracts/probe*.ts` | 探针类型、常量、验收与证据契约 |
-| `src/harness/probe-runtime.ts`、`src/harness/scripted-adapter.ts`、`src/harness/probe-scenarios.ts` | 探针运行时、脚本适配与场景 |
+| `src/harness/probe-runtime.ts` | Stage 0 探针运行时：真实模型只读调用 `get_robot_status` |
 | `src/trace/probe-evidence.ts` | 探针证据记录与脱敏导出 |
 | `src/eval/probe-acceptance.ts`、`src/eval/probe-report.ts` | 探针独立验收与汇总 |
 | `src/app/probe.ts`、`scripts/probe.ts` | 探针编排与 CLI 入口 |
@@ -100,7 +104,7 @@ Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享
 `evidence/`、`results/` 与 `.stage0/` 均为本地生成产物，不入库；源码、脚本和测试不使用 `stageN` 编号目录，Stage 编号只作为实施/验收里程碑。
 ## 模块职责与依赖
 
-**跨阶段准入规则**：下表同时约束当前探针代码和后续业务代码。公共业务模块的分层与依赖准入矩阵保持不变；探针按既有职责独立分层，历史证据保留；只有对应阶段开始后才可在业务目标路径创建实现。依赖按下表单向准入，任何新增模块、跨层快捷路径或 SDK 依赖都必须先更新本架构并完成复审。
+**跨阶段准入规则**：下表同时约束当前探针代码和后续业务代码。公共业务模块的分层与依赖准入矩阵保持不变；探针按既有职责独立分层。依赖按下表单向准入，任何新增模块、跨层快捷路径或 SDK 依赖都必须先更新本架构并完成复审。
 
 | 模块 | 可依赖 | 禁止依赖 | 职责与目标路径 |
 |---|---|---|---|
@@ -109,7 +113,7 @@ Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享
 | `simulator` | `contracts`、`trace`、`simulator` | SDK；`services`、`tools`、`harness`、`eval`、`app` | 状态机、fixture、故障注入与重置；业务目标为 `src/simulator/robot-simulator.ts` |
 | `services` | `contracts`、`trace`、`simulator`、`services` | `tools`、`harness`、`eval`、`app` | Robot/SOP/Ticket 业务语义、幂等与受控访问；通过 ServicePort 隔离内部实现；业务目标为 `src/services/*` |
 | `tools` | `contracts`、`trace`、`services`、`tools` | 禁止直接依赖 `simulator`；禁止 `harness`、`eval`、`app` | ToolBoundary 对七工具执行严格 schema、输出验证、身份、预算、一次性审批、default-deny 与错误映射，只经 ServicePort 调用 Services；业务目标为 `src/tools/*` |
-| `harness` | `contracts`、`trace`、`tools`、`harness` | 禁止直接依赖 `services`、`simulator`、`eval`、`app` | 组合原生 Loop、受控工具与运行时保护；探针运行时/适配/场景为 `src/harness/probe-runtime.ts`、`src/harness/scripted-adapter.ts`、`src/harness/probe-scenarios.ts`，业务目标为 `src/harness/business-runtime.ts` |
+| `harness` | `contracts`、`trace`、`tools`、`harness` | 禁止直接依赖 `services`、`simulator`、`eval`、`app` | 组合原生 Loop、受控工具与运行时保护；探针运行时为 `src/harness/probe-runtime.ts`，业务运行时为 `src/harness/business-runtime.ts` 及 `src/harness/runtime-*.ts`、`src/harness/business-scenarios.ts` |
 | `eval` | `contracts`、`trace`、`eval` | SDK；`simulator`、`services`、`tools`、`harness`、`app` | 从原始证据独立验收与汇总，不采信模型摘要；探针验收/报告为 `src/eval/probe-acceptance.ts`、`src/eval/probe-report.ts`，业务目标为 `src/eval/*` |
 | `app` | `contracts`、`trace`、`simulator`、`services`、`tools`、`harness`、`eval`、`app` | `scripts`、`tests` | 唯一编排层；探针编排为 `src/app/probe.ts`，业务目标为 `src/app/*` |
 | `scripts` | 仅 `app` | `contracts`、`trace`、`simulator`、`services`、`tools`、`harness`、`eval` 的内部实现及 `tests` | 参数解析、进程退出与 CLI 展示；探针 CLI 为 `scripts/probe.ts` |
@@ -129,11 +133,11 @@ Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享
 - 源码、脚本和测试按职责或功能组织，不创建或保留 `stageN` 编号目录；探针模块使用 `probe` / `probe-*` 文件名，探针测试按功能归入 `tests/probe/`。
 - 业务目标路径准入为 `src/contracts/business.ts`、`src/trace/business-trace.ts`、`src/simulator/robot-simulator.ts`、`src/services/*`、`src/tools/*`、`src/harness/business-runtime.ts`、`src/app/*`、`src/eval/*`；未进入对应阶段前不创建空实现、占位模块或假服务。
 
-### 未来业务模块职责（准入设计）
+### 业务模块职责
 
-以下分层和路径已经实现。Stage 0–5 为 `DONE`，Stage 6–7 待 live 证据重录。业务 integration 采用离线边界验收，真实模型实验与真实人审分开报告；不能用 scripted approval、文档或占位数据冒充 manual 证据。
+以下分层和路径均已实现。Stage 1–4 为 `DONE`，Stage 0、5–7 待真实 Agent 证据。业务链路只由真实模型验证，自动评测（scripted approval）与真实人审分开报告；不能用 scripted approval、文档或占位数据冒充 manual 证据。
 
-| 未来模块 | 目标路径 | 职责 |
+| 模块 | 路径 | 职责 |
 |---|---|---|
 | 公共业务契约 | `src/contracts/business.ts` | 七工具、ToolResult、状态与证据的中立契约 |
 | 业务 Trace | `src/trace/business-trace.ts` | 业务事件、调用关联、脱敏与不可覆盖记录边界 |
@@ -197,7 +201,7 @@ Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享
 - 故障序列每次**实际执行**动作消费一项；审批拦截不消费；序列耗尽时返回明确错误，不默认成功。
 - 每次 run 重新初始化机器人、任务、计数、授权和注入游标；`run_id` 唯一且不得覆盖旧 run。
 - 工单按 `run_id + robot_id + reason` 去重；重复请求返回同一幂等结果，不产生第二张工单。
-- 离线脚本模型不与 Harness 会话混同：只要存在真实 Harness Session（包括原生 Harness 运行时驱动的 offline scripted），就必须记录真实 `session_id`；只有没有 Harness 会话的纯离线测试允许 `session_id` 为空并明确标记，禁止伪造。
+- 每个业务 run 都由真实模型驱动原生 Harness Session，必须记录真实 `session_id`；缺少真实会话的 run 由评测器判为 `BLOCKED`（`live_missing_real_session`），禁止伪造。
 - Simulator 内部动作不得暴露为模型可绕过工具直接访问的接口。
 - 从基础阶段起记录 `run_id`、事件序号、`call_id` 调用关联、工具请求与实际执行、动作执行和状态变化。
 
@@ -212,7 +216,7 @@ Stage 0 只读探针按职责分层；业务代码不依赖探针模块（共享
 | `restart_navigation` 实际执行 | 2 次 | 只有动作真实开始才消费；拦截不消费 |
 | `force_reboot` 实际执行 | 1 次 | 有效审批且通过前提检查后真实开始才消费 |
 | 主动时间 | 300 秒 | 宿主单调时钟；人工等待另计 |
-| 人工审批等待 | 120 秒 | 超时或取消进入硬终止，不对应软停止；测试使用 fake clock，不真实等待 120 秒 |
+| 人工审批等待 | 120 秒 | 超时或取消进入硬停止，不对应软停止；测试使用 fake clock，不真实等待 120 秒 |
 
 Agent 发起业务重试，策略层只限制，不暗中重试。任一预算耗尽都必须安全结束、保持最后真实状态且不再启动后续机器人动作。
 
@@ -222,11 +226,11 @@ Agent 发起业务重试，策略层只限制，不暗中重试。任一预算�
 
 | 约束 | Runtime 运行前硬控制 | 实际边界 | 验收归属 |
 |---|---|---|---|
-| 七工具白名单与严格参数 | 是 | 只注册七个工具；未知工具、额外字段、错误类型或缺失必需参数在 handler、Service、Simulator 之前拒绝 | runtime 边界 unit/integration |
+| 七工具白名单与严格参数 | 是 | 只注册七个工具；未知工具、额外字段、错误类型或缺失必需参数在 handler、Service、Simulator 之前拒绝 | runtime 边界 unit / 真实 Agent eval |
 | 可信 `run_id/session_id/call_id`、重放与串行 | 是 | 身份和计数由宿主注入，模型不可填写；已消费审批不可重放；原生 Loop 固定 `maxParallelToolCalls=1` | runtime、approval ledger 和事件验收 |
 | `restart_navigation <=2`、`force_reboot <=1` | 是 | 只在动作真实开始时消费；拦截不消费；超限动作不得进入 Simulator。超限只拒绝该次调用（`ACTION_BUDGET_EXHAUSTED`），不停止 run，模型仍可走审批 force 或建工单收尾 | Policy/runtime/证据计数 |
 | 每 run 预算 | 是 | 20 model requests、30 tool requests、300 秒主动时间、120 秒审批等待；耗尽后不再启动机器人动作 | 预算、unit、事件重算 |
-| `force_reboot` 精确一次性审批 | 是 | 绑定精确 run/session/call/action/完整参数/状态指纹，同时通过项目 ledger 和 native allowed-once；拒绝重放、跨调用和跨状态复用 | approval unit/integration、核心 Eval |
+| `force_reboot` 精确一次性审批 | 是 | 绑定精确 run/session/call/action/完整参数/状态指纹，同时通过项目 ledger 和 native allowed-once；拒绝重放、跨调用和跨状态复用 | approval unit / 真实 Agent eval、核心 Eval |
 | 成功 SOP 在 restart 之前 | 否，不是通用前置门 | Prompt 要求成功 SOP 驱动 restart；核心场景 Eval 检查该轨迹。runtime 只在 `search_sop` 实际返回 `SOP_NOT_FOUND` 后软停止，不强制所有动作都必须有历史 SOP | Prompt + 核心场景 Eval；SOP 缺失停止另由 runtime 验收 |
 | 两次动作 `TIMEOUT` 后才尝试 force | 否 | 两次 restart timeout 是 Prompt 和 core-full 场景的预期路径，不是 `force_reboot` 的通用 runtime 前置限制 | Prompt + core-full Eval |
 | 初始 robot/task 独立读取 | 否 | Prompt 要求分别读取真实状态并核对绑定；runtime 不把读取顺序设为通用硬门 | Prompt + core 场景 Eval |
@@ -236,9 +240,9 @@ Agent 发起业务重试，策略层只限制，不暗中重试。任一预算�
 | resume 后读取 robot/task | 否 | Prompt 与核心 Eval 要求确认 `MOVING/RUNNING` 和绑定一致 | Prompt + core 场景 Eval |
 | full 模式的一般 `FATAL_FAILURE` 停止 | 否 | 通用 runtime 不把任意 `FATAL_FAILURE` 扩展成硬停止；full Prompt 要求停止并安全收尾。审批拒绝、已观察 SOP 缺失和 fail-fast 触发有各自硬边界 | Prompt；对应停止分支由单元/场景 Eval 验收 |
 | fail-fast 首次动作失败、已观察 SOP 缺失、真正用户审批拒绝 | 是，软停止硬边界 | 后续机器人动作（含重试、force、resume）全部 `DENIED`；原 run 预算内仍允许只读查询和幂等 ticket 收尾 | runtime/负例 unit、事件重算 |
-| 审批等待 timeout/取消、run 真正取消、主动时间 timeout、预算耗尽 | 是，硬终止 | 审批 timeout/取消由 runtime-approval 统一调用 `boundary.stop(APPROVAL_CANCELLED)`（timeout 另记 `approval_timeout/APPROVAL_TIMEOUT`）；不再调度正常业务模型成功路径，只由可信 host 保留最后真实状态并完成幂等 ticket 兜底 | runtime、审批 timeout/取消、预算负例和证据 |
-| 工单幂等 | 是 | 按精确 `run_id + robot_id + reason` 去重；不是自然语言/语义工单去重，不把不同 reason 合并 | Service unit/integration、事件 |
-| 事后 metrics `FAIL` | 不是运行前控制 | evaluator 在 run 结束后判定；不能据此反推 runtime 在执行前已阻止动作。运行前是否阻断必须看对应硬控制和事件 | Eval/recompute |
+| 审批等待 timeout/取消、run 真正取消、主动时间 timeout、预算耗尽 | 是，硬停止 | 审批 timeout/取消由 runtime-approval 统一调用 `boundary.stop(APPROVAL_CANCELLED)`（timeout 另记 `approval_timeout/APPROVAL_TIMEOUT`）；不再调度正常业务模型成功路径，只由可信 host 保留最后真实状态并完成幂等 ticket 兜底 | runtime、审批 timeout/取消、预算负例和证据 |
+| 工单幂等 | 是 | 按精确 `run_id + robot_id + reason` 去重；不是自然语言/语义工单去重，不把不同 reason 合并 | Service unit / 真实 Agent eval、事件 |
+| 事后 metrics `FAIL` | 不是运行前控制 | evaluator 在 run 结束后判定；不能据此反推 runtime 在执行前已阻止动作。运行前是否阻断必须看对应硬控制和事件 | Eval |
 
 表中 `Prompt + Eval` 不得写成通用 runtime 强制 SOP；`FAIL` 也不得写成“执行前已拒绝”。
 
@@ -266,14 +270,14 @@ Agent 发起业务重试，策略层只限制，不暗中重试。任一预算�
 
 ### 拒绝、超时、取消与状态保持
 
-停止恢复动作不等于一律停止模型调度，必须区分软停止和硬终止：
+停止恢复动作不等于一律停止模型调度，必须区分软停止和硬停止：
 
 | 类别 | 触发 | 停止后允许 | 禁止与记录 |
 |---|---|---|---|
 | 软停止 | fail-fast 首次动作失败、`search_sop` 实际返回 `SOP_NOT_FOUND`、真正用户审批拒绝（`APPROVAL_REJECTED`） | 仅允许在原 run 预算内继续只读查询和幂等工单收尾 | 后续机器人动作（包括重试、`force_reboot`、`resume_task`）仍为 `DENIED`；记录停止原因和最后状态 |
-| 硬终止 | 审批等待 timeout/取消（统一 stop reason 为 `APPROVAL_CANCELLED`）、run 真正取消、预算耗尽、宿主主动时间超时、runtime 错误 | 只由可信 host 保留最后真实状态并完成幂等 ticket 兜底；不继续模型正常成功路径，也不让模型补做收尾 | 不再调度正常业务模型成功路径，不补造模型缺失的成功证据 |
+| 硬停止 | 审批等待 timeout/取消（统一 stop reason 为 `APPROVAL_CANCELLED`）、run 真正取消、预算耗尽、宿主主动时间超时、runtime 错误 | 只由可信 host 保留最后真实状态并完成幂等 ticket 兜底；不继续模型正常成功路径，也不让模型补做收尾 | 不再调度正常业务模型成功路径，不补造模型缺失的成功证据 |
 
-无论软停止或硬终止，都不得把已经恢复的状态回滚为 `PAUSED`，必须保存最后真实状态；尚未恢复时任务自然保持 `PAUSED`。软停止的只读查询与幂等工单收尾、硬终止的可信 host 收尾可以进入终态审计；审批等待 timeout/取消属于硬终止，不能写成“视为用户拒绝”或软停止；真正用户 reject 保留为 `APPROVAL_REJECTED` 软停止。取消不回滚取消前已经完成的动作，因此“取消后不再有机器人副作用”不等于禁止审计或宿主工单兜底。
+无论软停止或硬停止，都不得把已经恢复的状态回滚为 `PAUSED`，必须保存最后真实状态；尚未恢复时任务自然保持 `PAUSED`。软停止的只读查询与幂等工单收尾、硬停止的可信 host 收尾可以进入终态审计；审批等待 timeout/取消属于硬停止，不能写成“视为用户拒绝”或软停止；真正用户 reject 保留为 `APPROVAL_REJECTED` 软停止。取消不回滚取消前已经完成的动作，因此“取消后不再有机器人副作用”不等于禁止审计或宿主工单兜底。
 
 若 resume 已完成，任务保持真实 `RUNNING`，不得回写 `PAUSED`；若 force 已执行，机器人记录实际 `ERROR`、`REBOOTING`、`IDLE` 或其他真实状态，不得伪造状态。
 
@@ -394,24 +398,17 @@ sequenceDiagram
 ### Trace 与不可覆盖证据
 
 - 原生日志与项目结构化业务事实分离；不得假定原生 canonical value 已持久化，也不得用模型文字补造事实。
-- 每个 run 使用唯一 `run_id`，关联 `scenario_id`、`session_id`、`call_id` 与严格递增事件序号。`session_id` 是否存在由真实 Harness Session 决定：原生 Harness 运行时驱动的 offline scripted 也必须记录真实会话标识；只有没有 Harness 会话的纯离线测试允许为空并明确标记，禁止伪造。
+- 每个 run 使用唯一 `run_id`，关联 `scenario_id`、`session_id`、`call_id` 与严格递增事件序号。`session_id` 来自真实 Harness Session；未配置 key 而在调用模型前被阻断的 run 没有会话，记为 `BLOCKED`，禁止伪造。
 - 必须保存必要工具结果、实际执行、状态前后、授权决定、授权来源、预算消费、调用关联和终态；工具请求数、实际执行数和保护动作违规数分开。
-- 每个 run 使用独立目录且不得覆盖旧 run。manifest 至少保存运行日期、依赖/Harness 锁版本、模型与配置、`scenario_id`、fixture/prompt/config 摘要、offline/live 模式、approval 来源、`batch_id` 与 repeat 序号。
-- 所有失败、超时、取消、环境错误与基础设施错误都要保留并进入 summary 分母；不得静默剔除，不得与 offline 结果混算。
+- 每个 run 使用独立目录且不得覆盖旧 run。manifest 至少保存运行日期、依赖/Harness 锁版本、模型与配置、`scenario_id`、fixture/prompt/config 摘要、运行模式（固定为 `live`）、approval 来源、`batch_id` 与 repeat 序号。
+- 所有失败、超时、取消、环境错误与基础设施错误都要保留并进入 summary 分母；不得静默剔除。
 - 指标必须能由保留事件重新计算；空值、缺日志和不完整关联不能推算为成功，应进入明确的 `NOT_MEASURED`、失败或阻塞状态。
 - 密钥、认证头、令牌和凭据不得进入 Trace、manifest、工具结果、汇总产物或展示素材。发现泄漏必须停止发布并交由主 Agent/用户处理。
 
-### Run manifest v1/v2 与 provenance
+### Run manifest
 
-- 新 run 只写 manifest v2；v1 run 只做只读兼容（`LEGACY_UNKNOWN`）。
-- v2 的 `provenance.schema_version=1`、`basis="compiled-javascript"`。`code.files` 覆盖当前运行模块所在编译 `src` 目录的全部 `.js` 磁盘产物，是保守范围，不按调用图缩小。
-- `evaluator.version="business-evaluator-v2"`；`evaluator.files` 的完整闭包定义为从 `code.files` 中按 `eval/`、`contracts/`、`trace/` 过滤得到的完整子集，不是调用图精确分析。
-- `code` 与 `evaluator` 都记录逐文件稳定相对路径、逐字节 SHA-256 和文件列表聚合 SHA-256，避免依赖绝对输出路径或文件枚举偶然顺序。
-- 根路径从 `import.meta.url` 推导，不从证据输出目录猜 `projectRoot`；provenance 不依赖 Git 或数据库。缺失编译产物必须失败，不做假 hash。
-- provenance 是重现和兼容性证据，不是签名认证、发布证明或供应链安全证明。
-- provenance 不宣称在运行中重编译时具有快照原子性；它记录文件读取/哈希时观察到的保守磁盘清单，不能作为同一时刻的不可变发布证明。
-- recompute 输出 `evaluator_compatibility`：`MATCH` 表示当前评估器指纹匹配；`DIFFERENT` 表示可读 provenance 但不匹配；`LEGACY_UNKNOWN` 表示 v1 无 provenance。该诊断不自动运行旧评估器，也不改写旧 metrics。
-- 默认 `npm run recompute` 只重算当前评估器产出的 run，其它 run 计入 `skipped_other_evaluator` 且不导致失败；`--all` 或 `--run <dir>` 严格检查，评估器漂移视为差异（exit `1`）。由于评估器指纹覆盖 `contracts/`、`eval/`、`trace/` 全部编译产物，修改这些目录后旧 run 自然退出默认范围，应重新生成证据。
+- manifest `schema_version=3`（已退役的 `1` 带 `evidence_sha256`、`2` 带 provenance），记录 fixture、prompt、config、lockfile 的 SHA-256，以及 Harness 与依赖版本；其它 `schema_version` 由 evaluator 判为 `manifest_schema_version` 完整性错误。
+- manifest 不记录代码或 evaluator 指纹，run 证据也没有防篡改封存；`metrics.json` 是写入时 evaluator 的结论。修改 `contracts/`、`eval/`、`trace/` 后应重新生成证据。
 
 ### 指标定义
 
@@ -422,9 +419,9 @@ sequenceDiagram
 | `scenario_pass` | 按场景 × 配置预期判定，不使用统一“必须完成任务”口径 |
 | `unsafe_action_count` | 无有效授权却实际执行的保护动作数；正常审批请求和被拒绝请求不算违规 |
 | 工具请求 / 实际执行 | 分开计数，审批拦截计为请求但不计执行；失败工具和实际动作分别统计 |
-| 审批来源 | 区分真实人工 `manual` 与评测脚本 `scripted` |
+| 审批请求 / 来源 | `approval_requests` 统计策略层发起的审批请求数（含超时、过期未决定的请求）；`approval_sources` 只列已作出决定的来源，区分真实人工 `manual` 与评测脚本 `scripted` |
 | 时间 | 主动时间与人工等待分开，从原始事件读取 |
-| token / cost | 未获取时统一记为 `NOT_MEASURED`，不猜数、不写 `0` |
+| token / cost | 从原生 `assistant/message` 的 usage 汇总；`assistant/attempt`（失败、重试或取消的请求）不带 usage 但可能已计费，出现任一条即两项都记为 `NOT_MEASURED`；cost 按 `contracts/pricing.ts` 的官方峰谷价逐次响应计价（北京时间）。usage 不完整时记为 `NOT_MEASURED`，无法计价时 cost 单独记为 `NOT_MEASURED`，不猜数、不写 `0` |
 
 `unsafe_action_count` 必须由策略记录与实际动作事实交叉核对，不能硬编码，也不能只相信工具返回值。所有验收 run 都必须为 `0`。
 
@@ -442,16 +439,16 @@ sequenceDiagram
 
 ### 恢复策略消融与真实人审
 
-首轮固定为 `5 场景 × 3 重复 × 2 配置 = 30 次 live 模型实验`。真实核心 manual 演示是独立门槛，必须等待模型外部真实人员确认，不计入 30 次自动 live，也不能由 scripted approval 代替。两种配置共享同一模型、工具、场景和安全策略：
+首轮固定为 `5 场景 × 3 重复 × 2 配置 = 30 次 live 模型实验`（`npm run eval` 默认 `--repeats 3`）。真实核心 manual 演示是独立门槛，必须等待模型外部真实人员确认，不计入 30 次自动 live，也不能由 scripted approval 代替。两种配置共享同一模型、工具、场景和安全策略：
 
 - **完整恢复**：按 Agent 的显式业务重试策略执行，允许在安全门后尝试 `force_reboot`。
 - **fail-fast**：第一次恢复动作失败后立即停止机器人动作并创建工单，不重试、不进入强制重启审批。
 
-该比较只能称为“恢复策略消融”，不能据此论证 Harness 优于其他框架。离线脚本模型验证代码路径，必须与 LLM E2E 实验分开报告。30 次 run 是小样本 MVP 验证，不代表生产统计显著性。
+该比较只能称为“恢复策略消融”，不能据此论证 Harness 优于其他框架。30 次 run 是小样本 MVP 验证，不代表生产统计显著性。
 
 ### 实测结果
 
-旧版本评测已于 2026-10-10 随评估器更新清理。当前可复现结果由 `npm run test:integration`、`npm run eval -- --offline` 与 `npm run recompute` 在本地生成；live 批次与 manual Demo 需用户提供 `DEEPSEEK_API_KEY` 后重新运行。
+2026-10-10 起只保留真实 Agent 验证，此前的离线脚本结果不再作为证据。真实 Agent 批次（`npm run eval`）与 manual Demo 需用户提供 `DEEPSEEK_API_KEY` 后运行。
 
 ## 设计取舍与阶段门槛
 
@@ -479,18 +476,18 @@ sequenceDiagram
 
 | 阶段 | 状态 | 当前证据 / 未关闭项 |
 |---|---|---|
-| Stage 0：项目侦察与硬门槛 | `DONE` | 只读运行时探针（`npm run probe:offline`） |
+| Stage 0：项目侦察与硬门槛 | `IN_PROGRESS` | 依赖版本门 + 真实只读调用探针（`npm run probe:live`）待按当前代码运行 |
 | Stage 1：机器人模拟器 | `DONE` | Simulator unit 测试 |
-| Stage 2：服务与工具层 | `DONE` | Services/ToolBoundary unit + offline integration |
+| Stage 2：服务与工具层 | `DONE` | Services/ToolBoundary unit |
 | Stage 3：DeepSeek Harness 集成 | `DONE` | 原生 Loop + 七工具；live E2E 待按当前评测器重录 |
-| Stage 4：失败恢复与人工审批 | `DONE` | 重试、超限拒绝、审批 ledger、拒绝/超时/取消负例 unit + integration |
-| Stage 5：Trace 与评测 | `DONE` | offline eval + recompute（当前评估器范围） |
+| Stage 4：失败恢复与人工审批 | `DONE` | 重试、超限拒绝、审批 ledger、拒绝/超时/取消负例 unit，含 `tests/business/runtime-chain.test.ts` 经原生 Loop 的链路回归 |
+| Stage 5：Trace 与评测 | `IN_PROGRESS` | 评测器 unit 已通过；真实 Agent 评测（`npm run eval`）待录制 |
 | Stage 6：Demo 与展示 | `IN_PROGRESS` | 真实 manual Demo 待用户重录（`npm run demo`） |
 | Stage 7：最终审计与交付 | `IN_PROGRESS` | 待 live eval 与 manual Demo 证据重录后关闭 |
 
-执行顺序为 `Stage 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7`。代码、unit、离线 integration 或 scripted run 均不能替代后续阶段真实 gate。
+执行顺序为 `Stage 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7`。代码、unit 或 scripted approval 均不能替代后续阶段真实 gate。
 
-**开发与验收顺序规则**：阶段状态只有在自身和全部前置外部 gate 有可追溯证据后才能标记 `DONE`。真实 manual 必须由模型外部人员确认；`scripted` approval 只能用于显式测试/评测。失败、取消、环境错误和 evaluator v1 的 4 个已解释差异必须保留。
+**开发与验收顺序规则**：阶段状态只有在自身和全部前置外部 gate 有可追溯证据后才能标记 `DONE`。真实 manual 必须由模型外部人员确认；`scripted` approval 只能用于显式测试/评测。失败、取消和环境错误必须保留在批次分母中。
 
 ### MVP 交付硬门槛
 
@@ -503,7 +500,3 @@ sequenceDiagram
 5. 新人可在一台干净环境按 README 完成安装、检查和最小演示。
 6. Harness 原生、项目适配、Mock 与未验证边界清晰；没有生产隔离、安全审计、供应链审计或框架优劣的超出证据声明。
 7. 任一硬门槛失败即阻塞，不能通过补写文档、假设结果或假完成绕过。
-
-
-
-

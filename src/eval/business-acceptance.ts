@@ -39,6 +39,7 @@ import {
   validateManifest,
 } from './business/evidence-parsers.js';
 import { evaluateScenarioExpectation } from './business/scenario-expectations.js';
+import { measureTokenCost } from './business/token-cost.js';
 import type {
   ActionRecord,
   ActionStartView,
@@ -92,9 +93,9 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
   if (hasNullSession && nonNullSessions.length > 0) addIntegrity('event_session_ids_mixed');
   const sessionId = nonNullSessions.length === 1 ? nonNullSessions[0]! : null;
 
-  const requiresSession = manifest.mode === 'live' || input.nativeEvents.length > 0;
-  const missingRealSession = requiresSession && sessionId === null;
-  if (manifest.mode === 'live' && sessionId === null) addIntegrity('live_missing_real_session');
+  // Every run is driven by the real agent, so every run must carry a real native session.
+  const missingRealSession = sessionId === null;
+  if (sessionId === null) addIntegrity('live_missing_real_session');
   if (input.nativeEvents.length > 0 && sessionId === null) addIntegrity('native_events_missing_business_session');
   if (sessionId !== null && input.nativeEvents.length === 0) addIntegrity('missing_native_session_events');
 
@@ -409,7 +410,7 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
       addIntegrity(`event_${read.index + 1}_state_read_invalid_call_chain`);
       continue;
     }
-    if ((requiresSession || sessionId !== null) && !hasMatchingNativeCall(read.callId, toolName, args)) {
+    if (!hasMatchingNativeCall(read.callId, toolName, args)) {
       addIntegrity(`event_${read.index + 1}_state_read_invalid_native_call`);
       continue;
     }
@@ -482,7 +483,7 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
           handler.args.error_code === initialRobot?.error_code,
       );
       if (matchingRequest === undefined || matchingHandler === undefined) return false;
-      if (requiresSession && !hasMatchingNativeCall(view.callId, 'search_sop', matchingRequest.args)) return false;
+      if (!hasMatchingNativeCall(view.callId, 'search_sop', matchingRequest.args)) return false;
       return true;
     });
   const restartStarts = allActionStarts.filter((start) => start.action === 'restart_navigation');
@@ -495,27 +496,25 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
       addIntegrity('missing_successful_sop_before_restart');
     }
   }
-  if (requiresSession && (toolRequests.length === 0 || handlers.length === 0)) addIntegrity('missing_tool_telemetry');
+  if (toolRequests.length === 0 || handlers.length === 0) addIntegrity('missing_tool_telemetry');
   for (const record of actionRecordsList) {
-    if (requiresSession) {
-      const matchingToolRequests = toolRequests.filter(
-        (request) =>
-          request.index < record.start.index &&
-          request.callId === record.start.callId &&
-          request.toolName === record.start.action &&
-          canonicalJson(request.args) === canonicalJson(record.start.args),
-      );
-      const matchingHandlers = handlers.filter(
-        (handler) =>
-          handler.index < record.start.index &&
-          handler.callId === record.start.callId &&
-          handler.toolName === record.start.action &&
-          canonicalJson(handler.args) === canonicalJson(record.start.args),
-      );
-      if (matchingToolRequests.length === 0) addIntegrity(`action_${record.start.callId}_missing_tool_request`);
-      if (matchingHandlers.length === 0) addIntegrity(`action_${record.start.callId}_missing_handler`);
-      if (!hasMatchingNativeCall(record.start.callId, record.start.action, record.start.args)) addIntegrity(`action_${record.start.callId}_missing_native_tool_call`);
-    }
+    const matchingToolRequests = toolRequests.filter(
+      (request) =>
+        request.index < record.start.index &&
+        request.callId === record.start.callId &&
+        request.toolName === record.start.action &&
+        canonicalJson(request.args) === canonicalJson(record.start.args),
+    );
+    const matchingHandlers = handlers.filter(
+      (handler) =>
+        handler.index < record.start.index &&
+        handler.callId === record.start.callId &&
+        handler.toolName === record.start.action &&
+        canonicalJson(handler.args) === canonicalJson(record.start.args),
+    );
+    if (matchingToolRequests.length === 0) addIntegrity(`action_${record.start.callId}_missing_tool_request`);
+    if (matchingHandlers.length === 0) addIntegrity(`action_${record.start.callId}_missing_handler`);
+    if (!hasMatchingNativeCall(record.start.callId, record.start.action, record.start.args)) addIntegrity(`action_${record.start.callId}_missing_native_tool_call`);
   }
 
   const actionExecutions: Record<ActionName, number> = { ...EMPTY_ACTIONS };
@@ -822,6 +821,7 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
     : scenarioPass
       ? 'PASS'
       : 'FAIL';
+  const { tokens, cost } = measureTokenCost(nativeViews, modelRequestsTotal, manifest.model);
 
   return {
     status,
@@ -834,11 +834,12 @@ function evaluateRunInternal(input: EvaluateRunInput): BusinessMetrics {
     model_requests: modelRequestsTotal,
     action_executions: actionExecutions,
     failed_tools: failedToolsTotal,
+    approval_requests: approvals.pending.length,
     approval_sources: approvalSources,
     active_ms: terminal.activeMs ?? 'NOT_MEASURED',
     approval_wait_ms: terminal.approvalWaitMs ?? 'NOT_MEASURED',
-    tokens: 'NOT_MEASURED',
-    cost: 'NOT_MEASURED',
+    tokens,
+    cost,
     integrity_errors: integrityErrors,
   };
 }

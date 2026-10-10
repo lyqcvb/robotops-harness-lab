@@ -1,12 +1,10 @@
 import path from 'node:path';
 import process from 'node:process';
 
-import type { BusinessMetrics, RecoveryMode, ScenarioId } from '../contracts/run.js';
+import type { RecoveryMode, ScenarioId } from '../contracts/run.js';
 import { SCENARIO_IDS } from '../contracts/run.js';
-import { createRunId } from '../trace/run-evidence.js';
-import { CONFIGS, runEval } from './business-batch.js';
+import { runEval } from './business-batch.js';
 import {
-  aggregateExitCode,
   emitError,
   emitRun,
   metricsExitCode,
@@ -19,7 +17,6 @@ import {
   runBusinessInternal,
   type ApprovalMode,
 } from './business-run.js';
-import { runRecompute } from './business-recompute.js';
 
 interface E2eOptions {
   readonly scenarioId: ScenarioId;
@@ -73,39 +70,6 @@ function parseE2e(argv: readonly string[]): E2eOptions | string {
   return { scenarioId, config, approvalMode };
 }
 
-async function runIntegration(io: BusinessCliIO): Promise<number> {
-  const projectRoot = path.resolve(io.cwd);
-  const batchId = createRunId('integration-batch');
-  const metrics: BusinessMetrics[] = [];
-  let threw = false;
-
-  for (const scenarioId of SCENARIO_IDS) {
-    for (const config of CONFIGS) {
-      try {
-        const result = await runBusinessInternal(
-          {
-            projectRoot,
-            scenarioId,
-            config,
-            mode: 'offline',
-            approvalMode: 'scripted',
-            batchId,
-            repeat: 1,
-          },
-          io.env,
-        );
-        emitRun(io, result);
-        metrics.push(result.metrics);
-      } catch (error) {
-        threw = true;
-        emitError(io, error);
-      }
-    }
-  }
-
-  return aggregateExitCode(metrics, threw);
-}
-
 async function runE2e(io: BusinessCliIO, argv: readonly string[]): Promise<number> {
   const parsed = parseE2e(argv);
   if (typeof parsed === 'string') return writeFailure(io, parsed);
@@ -116,7 +80,6 @@ async function runE2e(io: BusinessCliIO, argv: readonly string[]): Promise<numbe
         projectRoot: path.resolve(io.cwd),
         scenarioId: parsed.scenarioId,
         config: parsed.config,
-        mode: 'live',
         approvalMode: parsed.approvalMode,
         repeat: 1,
       },
@@ -144,7 +107,6 @@ async function runDemo(io: BusinessCliIO, argv: readonly string[]): Promise<numb
         projectRoot: path.resolve(io.cwd),
         scenarioId: 'navigation_restart_fail_then_reboot',
         config: 'full',
-        mode: 'live',
         approvalMode: 'manual',
         repeat: 1,
       },
@@ -167,17 +129,12 @@ export async function dispatch(
   if (command === undefined) return writeFailure(resolved, 'missing command');
 
   switch (command) {
-    case 'integration':
-      if (argv.length !== 1) return writeFailure(resolved, `unknown integration option: ${argv[1]!}`);
-      return runIntegration(resolved);
     case 'e2e':
       return runE2e(resolved, argv.slice(1));
     case 'eval':
       return runEval(resolved, argv.slice(1));
     case 'demo':
       return runDemo(resolved, argv.slice(1));
-    case 'recompute':
-      return runRecompute(resolved, argv.slice(1));
     default:
       return writeFailure(resolved, `unknown command: ${command}`);
   }

@@ -3,12 +3,11 @@ import process from 'node:process';
 import type { AcceptanceIssue, AcceptanceReport } from '../contracts/probe-acceptance.js';
 import { HARNESS_VERSION } from '../contracts/probe-constants.js';
 import type { CaseEvidence, GateEvidence, GateStatus, LiveEvidence, ProbeSummary } from '../contracts/probe-evidence.js';
-import type { LiveSmokeResult, ProbeCaseResult, ProbeExecutionResult, SafeError } from '../contracts/probe.js';
+import type { LiveSmokeResult, ProbeCaseResult, SafeError } from '../contracts/probe.js';
 import { makeCaseEvidence } from '../trace/probe-evidence.js';
 export function makeCaseFromResult(
   result: ProbeCaseResult,
   report: AcceptanceReport | undefined,
-  verification: 'offline' | 'live',
 ): CaseEvidence {
   const caseReport = report?.cases.find((item) => item.caseId === result.id);
   const acceptanceIssues = caseReport?.issues ?? [];
@@ -27,7 +26,7 @@ export function makeCaseFromResult(
   return makeCaseEvidence({
     id: result.id,
     status,
-    verification,
+    verification: 'live',
     sessionId: result.sessionId,
     modelRequests: result.modelRequests,
     toolRequests: result.toolRequests,
@@ -54,15 +53,6 @@ function sumCaseEvidence(cases: readonly CaseEvidence[]): ProbeSummary['counters
   });
 }
 
-function categoryStatus(
-  report: AcceptanceReport | undefined,
-  category: AcceptanceIssue['category'],
-  fallback: GateStatus,
-): GateStatus {
-  if (report === undefined) return fallback;
-  return report.issues.some((issue) => issue.category === category) ? 'FAIL' : 'PASS';
-}
-
 export function issueDetail(issues: readonly AcceptanceIssue[], fallback: string): string {
   if (issues.length === 0) return fallback;
   return issues.slice(0, 3).map((issue) => `${issue.code}: ${issue.message}`).join('; ');
@@ -70,13 +60,9 @@ export function issueDetail(issues: readonly AcceptanceIssue[], fallback: string
 
 interface SummaryBuildInput {
   readonly runId: string;
-  readonly mode: 'offline' | 'live';
   readonly installedVersions: Readonly<Record<string, string>>;
   readonly lockfileSha256: string;
   readonly envError: SafeError | null;
-  readonly offlineResult?: ProbeExecutionResult;
-  readonly offlineReport?: AcceptanceReport;
-  readonly offlineRuntimeError: SafeError | null;
   readonly liveResult?: LiveSmokeResult;
   readonly liveReport?: AcceptanceReport;
   readonly liveGate: GateEvidence;
@@ -89,22 +75,13 @@ interface SummaryBuildInput {
 
 export function buildSummary(input: SummaryBuildInput): ProbeSummary {
   const cases: CaseEvidence[] = [];
-  if (input.offlineResult !== undefined) {
-    for (const item of input.offlineResult.cases) {
-      cases.push(makeCaseFromResult(item, input.offlineReport, 'offline'));
-    }
-  }
   if (input.liveResult !== undefined) {
-    cases.push(makeCaseFromResult(input.liveResult, input.liveReport, 'live'));
+    cases.push(makeCaseFromResult(input.liveResult, input.liveReport));
   }
 
-  const offlineFallback: GateStatus = input.envError !== null ? 'NOT_RUN' : 'FAIL';
   const staticDetail = input.envError === null
     ? 'installed package metadata matches package-lock.json'
     : `environment gate blocked: ${input.envError.message}`;
-  const offlineFallbackDetail = input.envError !== null
-    ? 'offline suite was not run because the static environment gate is blocked'
-    : input.offlineRuntimeError?.message ?? 'offline suite did not produce an acceptance report';
   const gates: GateEvidence[] = [
     {
       name: 'static-versions',
@@ -112,42 +89,15 @@ export function buildSummary(input: SummaryBuildInput): ProbeSummary {
       verification: 'static',
       detail: staticDetail,
     },
-    {
-      name: 'offline-whitelist',
-      status: categoryStatus(input.offlineReport, 'whitelist', offlineFallback),
-      verification: 'offline',
-      detail: input.offlineReport === undefined
-        ? offlineFallbackDetail
-        : issueDetail(input.offlineReport.issues.filter((issue) => issue.category === 'whitelist'), 'seven-tool whitelist acceptance passed'),
-    },
-    {
-      name: 'offline-safety',
-      status: categoryStatus(input.offlineReport, 'safety', offlineFallback),
-      verification: 'offline',
-      detail: input.offlineReport === undefined
-        ? offlineFallbackDetail
-        : issueDetail(input.offlineReport.issues.filter((issue) => issue.category === 'safety'), 'offline approval and execution safety acceptance passed'),
-    },
-    {
-      name: 'offline-persistence',
-      status: categoryStatus(input.offlineReport, 'persistence', offlineFallback),
-      verification: 'offline',
-      detail: input.offlineReport === undefined
-        ? offlineFallbackDetail
-        : issueDetail(input.offlineReport.issues.filter((issue) => issue.category === 'persistence'), 'native event pairing and JSONL persistence acceptance passed'),
-    },
     input.liveGate,
   ];
 
-  const counterScope = input.mode === 'offline'
-    ? 'Counters cover scripted offline probe cases only; modelRequests are scripted adapter requests, not live API calls.'
-    : input.liveResult === undefined
-      ? 'Counters cover scripted offline probe cases only; the LIVE case was not executed, so no live API calls are counted.'
-      : 'Counters cover scripted offline probe cases plus the LIVE case; only the LIVE modelRequests value represents real provider requests.';
   const notes = [
     ...input.notes,
-    counterScope,
-    'Approval decisions in these runs are scripted Stage 0 harness evidence, not human approvals.',
+    input.liveResult === undefined
+      ? 'The LIVE case was not executed, so no provider requests are counted.'
+      : 'Counters cover the LIVE case only; modelRequests are real provider requests.',
+    'The live smoke permits only get_robot_status; no approval is requested or granted.',
     'Probe tools use stub counters only: no robot state, task, ticket, or other business side effect was produced or claimed.',
   ];
 
@@ -159,7 +109,7 @@ export function buildSummary(input: SummaryBuildInput): ProbeSummary {
     harnessVersion: HARNESS_VERSION,
     installedVersions: input.installedVersions,
     lockfileSha256: input.lockfileSha256,
-    mode: input.mode,
+    mode: 'live',
     status: input.status,
     stage0Complete: input.stage0Complete,
     gates,

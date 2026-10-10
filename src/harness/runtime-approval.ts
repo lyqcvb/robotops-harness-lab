@@ -5,7 +5,7 @@ import type {
   BusinessRuntimeInput,
   PendingApproval,
 } from './runtime-types.js';
-import { denied, MAX_TIMER_MS, safeError } from './runtime-support.js';
+import { denied, MAX_TIMER_MS, safeError, type BlockCall } from './runtime-support.js';
 
 type DecisionOutcome = 'approved' | 'rejected' | 'cancelled' | 'timeout';
 
@@ -57,20 +57,22 @@ export function createApprovalHandler({
   input,
   pendingApprovals,
   armActiveTimer,
+  blockCall,
 }: {
   readonly input: BusinessRuntimeInput;
   readonly pendingApprovals: Map<string, PendingApproval>;
   readonly armActiveTimer: () => void;
+  readonly blockCall: BlockCall;
 }): (req: ApprovalRequest) => Promise<ApprovalOutcome> {
   const runId = input.runId;
 
+  // Each outcome states why force_reboot did not run and what the run still allows, so the
+  // model can tell a human "no" from an expired, withdrawn or broken approval.
   const recordDeniedApproval = (pending: PendingApproval, code: string, reason: string): void => {
-    input.trace.record('tool_result', pending.callId, {
-      tool_name: 'force_reboot',
-      result: denied(code, reason),
-      phase: 'approval',
-    });
+    blockCall(pending.callId, 'force_reboot', 'approval', denied(code, reason));
   };
+  const SOFT_STOP_NOTE = 'Robot actions are disabled for the rest of this run; status reads, SOP lookup and maintenance tickets remain available.';
+  const HARD_STOP_NOTE = 'The run is stopped; no further tool calls will be accepted.';
 
   return async (req: ApprovalRequest): Promise<ApprovalOutcome> => {
     const callId = req.callId === undefined ? '' : String(req.callId);
@@ -86,6 +88,12 @@ export function createApprovalHandler({
         tool_name: req.toolName,
         reason: 'approval request does not match a pending force_reboot call',
       });
+      if (callId !== '') {
+        blockCall(callId, String(req.toolName), 'approval', denied(
+          'APPROVAL_UNMATCHED',
+          'The approval request did not match a pending force_reboot call for this run and session, so it was rejected.',
+        ));
+      }
       return 'rejected';
     }
 
@@ -102,7 +110,11 @@ export function createApprovalHandler({
       if (input.approval === undefined) {
         // No channel means no decision source; cancel without attributing one.
         input.ledger.cancel(callId, 'approval channel unavailable');
-        recordDeniedApproval(pending, 'APPROVAL_UNAVAILABLE', 'no approval channel is available');
+        recordDeniedApproval(
+          pending,
+          'APPROVAL_UNAVAILABLE',
+          `No approval channel is configured for this run, so nobody can approve force_reboot. ${SOFT_STOP_NOTE}`,
+        );
         input.trace.record('approval_unavailable', callId, { action: 'force_reboot' });
         input.boundary.stop('APPROVAL_UNAVAILABLE');
         return 'unavailable';
@@ -124,7 +136,11 @@ export function createApprovalHandler({
 
       if (outcome === 'approved') {
         if (!input.ledger.decide(callId, 'approved', source)) {
-          recordDeniedApproval(pending, 'APPROVAL_INVALID', 'approval binding is no longer valid');
+          recordDeniedApproval(
+            pending,
+            'APPROVAL_INVALID',
+            `An approval arrived, but its one-time binding no longer matches this call (already used, cancelled or expired), so it was treated as a rejection. ${SOFT_STOP_NOTE}`,
+          );
           input.boundary.stop('APPROVAL_REJECTED');
           return 'rejected';
         }
@@ -133,7 +149,7 @@ export function createApprovalHandler({
 
       if (outcome === 'rejected') {
         input.ledger.decide(callId, 'rejected', source);
-        recordDeniedApproval(pending, 'APPROVAL_REJECTED', 'force_reboot approval was rejected');
+        recordDeniedApproval(pending, 'APPROVAL_REJECTED', `The approver rejected force_reboot. ${SOFT_STOP_NOTE}`);
         // A rejection is a soft stop: robot actions end, the model may still write a ticket.
         input.boundary.stop('APPROVAL_REJECTED');
         return 'rejected';
@@ -141,17 +157,35 @@ export function createApprovalHandler({
 
       input.ledger.decide(callId, 'cancelled', source);
       if (outcome === 'timeout') {
-        recordDeniedApproval(pending, 'APPROVAL_TIMEOUT', 'force_reboot approval deadline expired');
+        recordDeniedApproval(
+          pending,
+          'APPROVAL_TIMEOUT',
+          `No approval decision arrived before the approval deadline, so the request expired. ${HARD_STOP_NOTE}`,
+        );
         input.trace.record('approval_timeout', callId, { action: 'force_reboot' });
+      } else if (controller.signal.aborted) {
+        recordDeniedApproval(
+          pending,
+          'APPROVAL_CANCELLED',
+          `The approval request was withdrawn because the run was cancelled before a decision arrived. ${HARD_STOP_NOTE}`,
+        );
       } else {
-        recordDeniedApproval(pending, 'APPROVAL_CANCELLED', 'force_reboot approval was cancelled');
+        recordDeniedApproval(
+          pending,
+          'APPROVAL_CANCELLED',
+          `The approver cancelled the request without approving or rejecting it. ${HARD_STOP_NOTE}`,
+        );
       }
       input.boundary.stop('APPROVAL_CANCELLED');
       return 'cancelled';
     } catch (error) {
       const details = safeError(error);
       input.ledger.decide(callId, 'cancelled', source);
-      recordDeniedApproval(pending, 'APPROVAL_ERROR', `approval channel failed: ${details.message}`);
+      recordDeniedApproval(
+        pending,
+        'APPROVAL_ERROR',
+        `The approval channel failed before returning a decision (${details.message}). ${HARD_STOP_NOTE}`,
+      );
       input.trace.record('runtime_error', callId, {
         phase: 'approval',
         error: { name: details.name, message: details.message, code: details.code },

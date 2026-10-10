@@ -1,5 +1,6 @@
+import type { LlmAdapter } from '@deepseek-ai/dsh-llm';
+
 import type { ScenarioId } from '../contracts/run.js';
-import type { ScriptedTurn } from '../contracts/shared.js';
 import type { ApprovalLedger } from '../tools/approval-ledger.js';
 import type { ToolBoundary } from '../tools/tool-boundary.js';
 import type { BusinessTrace } from '../trace/business-trace.js';
@@ -41,16 +42,22 @@ export interface BusinessRuntimeInput {
   readonly projectRoot: string;
   readonly runId: string;
   readonly scenarioId: ScenarioId;
-  readonly mode: 'offline' | 'live';
   readonly model: string;
   readonly prompt: string;
-  readonly turns: readonly ScriptedTurn[];
   readonly trace: BusinessTrace;
   readonly boundary: ToolBoundary;
   readonly ledger: ApprovalLedger;
   readonly nativeEvents: unknown[];
   readonly approval?: BusinessRuntimeApproval;
   readonly signal?: AbortSignal;
+  /**
+   * Test-only model seam for keyless regression tests of the runtime, policy and
+   * approval chain. No CLI path sets it: every business run loads the DeepSeek plugin.
+   */
+  readonly testModel?: {
+    readonly provider: string;
+    readonly adapter: LlmAdapter;
+  };
 }
 
 export interface BusinessRuntimeResult {

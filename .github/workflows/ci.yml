@@ -1,8 +1,7 @@
 # RobotOps Harness Lab — 无 API Key 的持续集成检查
 #
-# 下面所有步骤都在 offline / scripted 路径上运行，不需要任何凭据，也不调用真实模型：
-# 没有 secrets、没有 live e2e、没有人工审批步骤。
-# 需要 DEEPSEEK_API_KEY 的 `test:e2e`、`eval`（live）、`demo` 和 `probe:live` 一律不在 CI 中运行。
+# CI 只做静态检查与单元测试，不需要任何凭据，也不调用模型：没有 secrets、没有 Agent 运行、没有人工审批步骤。
+# 业务验证只走真实 Agent：需要 DEEPSEEK_API_KEY 的 `test:e2e`、`eval`、`demo` 和 `probe:live` 由维护者在本地运行。
 
 name: CI
 
@@ -12,7 +11,7 @@ on:
 
 jobs:
   checks:
-    name: typecheck / lint / unit / integration / offline eval
+    name: typecheck / lint / unit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,12 +35,5 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
-      - name: Integration tests (offline, scripted approval)
-        run: npm run test:integration
-
-      - name: Offline evaluation
-        run: npm run eval -- --offline
-
-      # 重算本次 CI 生成的全部 run；任何指标或证据摘要不一致都会失败。
-      - name: Recompute generated evidence
-        run: npm run recompute -- --all
+      # 单元测试包含脚本化适配器驱动的 runtime / 审批链路回归（tests/business/runtime-chain.test.ts），不调用模型。
+      # 业务验证只走真实 Agent（需要 DEEPSEEK_API_KEY），由维护者在本地运行 npm run eval，不在 CI 中调用模型。

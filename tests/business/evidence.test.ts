@@ -9,10 +9,7 @@ import type { BusinessEvent } from '../../src/contracts/business.js';
 import type { BusinessMetrics, RunManifest } from '../../src/contracts/run.js';
 import { canonicalJson } from '../../src/contracts/canonical-json.js';
 import { evaluateRun } from '../../src/eval/business-acceptance.js';
-import {
-  recomputeRun,
-  summarizeRuns,
-} from '../../src/eval/business-report.js';
+import { summarizeRuns } from '../../src/eval/business-report.js';
 import {
   createRunId,
   digest,
@@ -36,6 +33,7 @@ function baseMetrics(status: BusinessMetrics['status']): BusinessMetrics {
       resume_task: 1,
     },
     failed_tools: 0,
+    approval_requests: 0,
     approval_sources: [],
     active_ms: 100,
     approval_wait_ms: 0,
@@ -45,14 +43,14 @@ function baseMetrics(status: BusinessMetrics['status']): BusinessMetrics {
   };
 }
 
-function manifest(runId: string, mode: 'offline' | 'live'): RunManifest {
+function manifest(runId: string): RunManifest {
   return {
-    schema_version: 1,
+    schema_version: 3,
     run_id: runId,
     created_at: '2026-09-26T00:00:00.000Z',
     scenario_id: 'happy_path',
-    mode,
-    model: 'scripted-test',
+    mode: 'live',
+    model: 'test-model',
     config: 'full',
     approval_source: 'none',
     batch_id: 'batch',
@@ -71,7 +69,7 @@ function happyRun(): {
   readonly events: BusinessEvent[];
   readonly nativeEvents: unknown[];
 } {
-  const runManifest = manifest('run-happy', 'offline');
+  const runManifest = manifest('run-happy');
   const sessionId = 'session-happy';
   let atMs = 1000;
   let seq = 0;
@@ -182,7 +180,7 @@ test('digest is stable canonical SHA-256 and hashes strings as original text', (
   );
   assert.notEqual(digest({ a: 1, b: 2 }), digest({ a: 2, b: 1 }));
   assert.equal(canonicalJson({ b: 2, a: 1 }), canonicalJson({ a: 1, b: 2 }));
-  assert.match(createRunId('offline'), /^\d{8}T\d{6}Z-offline-[0-9a-f-]{36}$/);
+  assert.match(createRunId('live'), /^\d{8}T\d{6}Z-live-[0-9a-f-]{36}$/);
 });
 
 test('run bundles are non-overwriting, redacted and independently readable', async (t) => {
@@ -234,82 +232,48 @@ test('run bundles are non-overwriting, redacted and independently readable', asy
   );
 });
 
-test('recomputeRun reads raw evidence and ignores overwritten stored metrics', async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), 'robotops-recompute-'));
-  t.after(async () => {
-    await rm(root, { recursive: true, force: true });
-  });
-  const run = happyRun();
-  const expected = evaluateRun(run);
-  assert.equal(expected.status, 'PASS');
-  const { directory } = await writeRunBundle({
-    projectRoot: root,
-    manifest: run.manifest,
-    events: run.events,
-    nativeEvents: run.nativeEvents,
-    metrics: { ...expected, unsafe_action_count: 99 },
-  });
-
-  const recomputed = await recomputeRun(directory);
-  assert.deepEqual(recomputed, expected);
-  assert.equal(recomputed.unsafe_action_count, 0);
-  assert.equal(recomputed.model_requests, 1);
-});
-
-
-for (const cacheState of ['invalid JSON', 'missing'] as const) {
-  test(`recomputeRun ignores ${cacheState} metrics while readRunBundle stays strict`, async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'robotops-recompute-'));
+for (const metricsState of ['invalid JSON', 'missing'] as const) {
+  test(`readRunBundle rejects ${metricsState} metrics`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'robotops-evidence-'));
     try {
       const run = happyRun();
-      const expected = evaluateRun(run);
-      const { directory } = await writeRunBundle({ projectRoot: root, ...run, metrics: expected });
+      const { directory } = await writeRunBundle({ projectRoot: root, ...run, metrics: evaluateRun(run) });
       const metricsPath = path.join(directory, 'metrics.json');
-      if (cacheState === 'missing') await unlink(metricsPath);
-      else await writeFile(metricsPath, '{broken cache', 'utf8');
+      if (metricsState === 'missing') await unlink(metricsPath);
+      else await writeFile(metricsPath, '{broken metrics', 'utf8');
 
       await assert.rejects(() => readRunBundle(directory), /metrics\.json/);
-      assert.deepEqual(await recomputeRun(directory), expected);
-      if (cacheState === 'missing') {
-        await assert.rejects(() => readFile(metricsPath), { code: 'ENOENT' });
-      } else {
-        assert.equal(await readFile(metricsPath, 'utf8'), '{broken cache');
-      }
     } finally {
       assert.equal(path.dirname(path.resolve(root)), path.resolve(tmpdir()));
-      assert.ok(path.basename(root).startsWith('robotops-recompute-'));
+      assert.ok(path.basename(root).startsWith('robotops-evidence-'));
       await rm(root, { recursive: true, force: true });
     }
   });
 }
 
 for (const fileName of ['manifest.json', 'business-events.jsonl', 'native-events.jsonl']) {
-  test(`recomputeRun rejects malformed raw evidence in ${fileName}`, async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'robotops-recompute-'));
+  test(`readRunBundle rejects malformed raw evidence in ${fileName}`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'robotops-evidence-'));
     try {
       const run = happyRun();
       const { directory } = await writeRunBundle({ projectRoot: root, ...run, metrics: evaluateRun(run) });
       const malformed = fileName.endsWith('.jsonl') ? '{}\n{broken evidence\n' : '{broken evidence';
       await writeFile(path.join(directory, fileName), malformed, 'utf8');
       await assert.rejects(() => readRunBundle(directory), SyntaxError);
-      await assert.rejects(() => recomputeRun(directory), SyntaxError);
     } finally {
       assert.equal(path.dirname(path.resolve(root)), path.resolve(tmpdir()));
-      assert.ok(path.basename(root).startsWith('robotops-recompute-'));
+      assert.ok(path.basename(root).startsWith('robotops-evidence-'));
       await rm(root, { recursive: true, force: true });
     }
   });
 }
 
-test('summarizeRuns separates offline and live, keeps run ids and exposes missing denominator', () => {
-  const offlineManifest = manifest('run-offline-pass', 'offline');
-  const liveFailManifest = manifest('run-live-fail', 'live');
-  const liveBlockedManifest = manifest('run-live-blocked', 'live');
+test('summarizeRuns counts live runs by status, keeps run ids and exposes missing denominator', () => {
   const summary = summarizeRuns(
     [
-      { manifest: offlineManifest, metrics: baseMetrics('PASS') },
-      { manifest: liveFailManifest, metrics: { ...baseMetrics('FAIL'), task_success: false, scenario_pass: false } },
-      { manifest: liveBlockedManifest, metrics: { ...baseMetrics('BLOCKED'), task_success: false, scenario_pass: false } },
+      { manifest: manifest('run-live-pass'), metrics: baseMetrics('PASS') },
+      { manifest: manifest('run-live-fail'), metrics: { ...baseMetrics('FAIL'), task_success: false, scenario_pass: false } },
+      { manifest: manifest('run-live-blocked'), metrics: { ...baseMetrics('BLOCKED'), task_success: false, scenario_pass: false } },
     ],
     4,
   );
@@ -318,19 +282,14 @@ test('summarizeRuns separates offline and live, keeps run ids and exposes missin
   assert.equal(summary.missing, 1);
   assert.equal(summary.extra, 0);
   assert.equal(summary.complete, false);
-  assert.equal(summary.modes.offline.total, 1);
-  assert.equal(summary.modes.offline.pass, 1);
-  assert.deepEqual(summary.modes.offline.run_ids, ['run-offline-pass']);
-  assert.equal(summary.modes.live.total, 2);
+  assert.equal(summary.modes.live.total, 3);
+  assert.equal(summary.modes.live.pass, 1);
   assert.equal(summary.modes.live.fail, 1);
   assert.equal(summary.modes.live.blocked, 1);
-  assert.deepEqual(summary.modes.live.run_ids, ['run-live-fail', 'run-live-blocked']);
-  assert.equal(summary.groups.length, 2);
-  assert.deepEqual(summary.run_ids, [
-    'run-offline-pass',
-    'run-live-fail',
-    'run-live-blocked',
-  ]);
+  assert.equal(summary.modes.live.complete, false);
+  assert.equal(summary.modes.live.missing, 1);
+  assert.equal(summary.groups.length, 1);
+  assert.deepEqual(summary.run_ids, ['run-live-pass', 'run-live-fail', 'run-live-blocked']);
 });
 
 

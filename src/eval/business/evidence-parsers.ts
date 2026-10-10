@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import type { ActionName, BusinessEvent, RobotSnapshot, SimulatorSnapshot, TaskSnapshot } from '../../contracts/business.js';
 import { SOFT_STOP_REASONS } from '../../contracts/policy.js';
 import { SCENARIO_IDS } from '../../contracts/run.js';
@@ -311,6 +310,7 @@ export function baseMetrics(
     model_requests: 0,
     action_executions: { ...EMPTY_ACTIONS, force_reboot: unprovableForceExecutions },
     failed_tools: 0,
+    approval_requests: 0,
     approval_sources: [],
     active_ms: 'NOT_MEASURED',
     approval_wait_ms: 'NOT_MEASURED',
@@ -382,7 +382,8 @@ export function parseNativeViews(
       addIntegrity(`native_event_${index + 1}_invalid_envelope`);
       continue;
     }
-    views.push({ index, type: raw.type, data: raw.data });
+    const timeMs = typeof raw.time === 'number' && Number.isFinite(raw.time) ? raw.time : null;
+    views.push({ index, type: raw.type, timeMs, data: raw.data });
   }
   return views;
 }
@@ -650,13 +651,11 @@ export function validateManifest(
   manifest: RunManifest,
   addIntegrity: (code: string) => void,
 ): void {
-  if (manifest.schema_version !== 1 && manifest.schema_version !== 2) {
-    addIntegrity('manifest_schema_version');
-  }
+  if (manifest.schema_version !== 3) addIntegrity('manifest_schema_version');
   if (typeof manifest.run_id !== 'string' || manifest.run_id.length === 0) addIntegrity('manifest_run_id');
   if (!isScenarioId(manifest.scenario_id)) addIntegrity('manifest_scenario_id');
   if (!isRecoveryMode(manifest.config)) addIntegrity('manifest_config');
-  if (manifest.mode !== 'offline' && manifest.mode !== 'live') addIntegrity('manifest_mode');
+  if (manifest.mode !== 'live') addIntegrity('manifest_mode');
   if (typeof manifest.created_at !== 'string' || Number.isNaN(Date.parse(manifest.created_at))) addIntegrity('manifest_created_at');
   if (typeof manifest.model !== 'string' || manifest.model.length === 0) addIntegrity('manifest_model');
   if (!['manual', 'scripted', 'none'].includes(manifest.approval_source)) addIntegrity('manifest_approval_source');
@@ -676,130 +675,6 @@ export function validateManifest(
   } else {
     for (const [key, value] of Object.entries(manifest.installed_versions)) {
       if (key.length === 0 || typeof value !== 'string') addIntegrity('manifest_installed_versions');
-    }
-  }
-  if (manifest.schema_version === 2) {
-    validateProvenance(manifest.provenance, addIntegrity);
-  } else if (manifest.provenance !== undefined) {
-    // A schema v1 manifest must not carry a provenance block. Skipping validation
-    // whenever schema_version is not 2 previously let a bundle opt out of
-    // provenance checking by editing that one integer while keeping the (possibly
-    // corrupted) provenance in place. A present-but-unvalidated provenance block is
-    // a contradiction, not a legacy record, so it fails closed.
-    addIntegrity('manifest_provenance_present_in_v1');
-  }
-}
-
-interface FingerprintEntry {
-  readonly path: string;
-  readonly sha256: string;
-}
-
-function isSha256(value: unknown): value is string {
-  return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
-}
-
-function isSafeRelativeJavaScriptPath(value: unknown): value is string {
-  if (typeof value !== 'string' || value.length === 0 || value.includes('\\') || value.includes(':') || value.includes('\u0000')) return false;
-  if (value.startsWith('/') || !value.endsWith('.js')) return false;
-  return value.split('/').every((segment) => segment.length > 0 && segment !== '.' && segment !== '..');
-}
-
-function parseFingerprintFiles(
-  value: unknown,
-  label: 'code' | 'evaluator',
-  addIntegrity: (code: string) => void,
-): readonly FingerprintEntry[] | null {
-  if (!isRecord(value) || !Array.isArray(value.files) || value.files.length === 0) {
-    addIntegrity(`manifest_provenance_${label}_files`);
-    return null;
-  }
-  const files: FingerprintEntry[] = [];
-  let invalid = false;
-  for (const entry of value.files) {
-    if (!isRecord(entry) || !isSafeRelativeJavaScriptPath(entry.path) || !isSha256(entry.sha256)) {
-      invalid = true;
-      continue;
-    }
-    files.push({ path: entry.path, sha256: entry.sha256 });
-  }
-  const paths = files.map((entry) => entry.path);
-  const sorted = [...paths].sort();
-  if (invalid || paths.length !== value.files.length) addIntegrity(`manifest_provenance_${label}_files`);
-  if (new Set(paths).size !== paths.length) addIntegrity(`manifest_provenance_${label}_files_duplicate`);
-  if (canonicalJson(paths) !== canonicalJson(sorted)) addIntegrity(`manifest_provenance_${label}_files_order`);
-  return files;
-}
-
-function validateFingerprintHash(
-  fingerprint: JsonRecord,
-  files: readonly FingerprintEntry[],
-  label: 'code' | 'evaluator',
-  addIntegrity: (code: string) => void,
-): void {
-  if (!isSha256(fingerprint.sha256)) addIntegrity(`manifest_provenance_${label}_sha256`);
-  else if (fingerprint.sha256 !== createHash('sha256').update(canonicalJson(files)).digest('hex')) {
-    addIntegrity(`manifest_provenance_${label}_fingerprint_mismatch`);
-  }
-}
-
-function validateProvenance(value: unknown, addIntegrity: (code: string) => void): void {
-  if (!isRecord(value)) {
-    addIntegrity('manifest_provenance');
-    return;
-  }
-  if (value.schema_version !== 1) addIntegrity('manifest_provenance_schema_version');
-  if (value.basis !== 'compiled-javascript') addIntegrity('manifest_provenance_basis');
-  if (!isRecord(value.code)) {
-    addIntegrity('manifest_provenance_code');
-    return;
-  }
-  if (!isRecord(value.evaluator)) {
-    addIntegrity('manifest_provenance_evaluator');
-    return;
-  }
-  if (typeof value.evaluator.version !== 'string' || value.evaluator.version.length === 0) {
-    addIntegrity('manifest_provenance_evaluator_version');
-  }
-
-  const code = value.code as JsonRecord;
-  const evaluator = value.evaluator as JsonRecord;
-  const codeFiles = parseFingerprintFiles(code, 'code', addIntegrity);
-  const evaluatorFiles = parseFingerprintFiles(evaluator, 'evaluator', addIntegrity);
-  if (codeFiles === null || evaluatorFiles === null) return;
-
-  validateFingerprintHash(code, codeFiles, 'code', addIntegrity);
-  validateFingerprintHash(evaluator, evaluatorFiles, 'evaluator', addIntegrity);
-
-  const codeLayers = new Set(codeFiles.map((entry) => entry.path.split('/')[0]));
-  for (const layer of ['app', 'contracts', 'eval', 'harness', 'services', 'simulator', 'tools', 'trace']) {
-    if (!codeLayers.has(layer)) addIntegrity(`manifest_provenance_code_missing_layer_${layer}`);
-  }
-  for (const requiredPath of [
-    'app/business.js',
-    'eval/business-acceptance.js',
-    'contracts/run.js',
-    'trace/run-evidence.js',
-  ]) {
-    if (!codeFiles.some((entry) => entry.path === requiredPath)) {
-      addIntegrity(`manifest_provenance_code_missing_required_${requiredPath}`);
-    }
-  }
-
-  const evaluatorRoots = new Set(['eval', 'contracts', 'trace']);
-  const expectedEvaluatorFiles = codeFiles.filter((entry) => evaluatorRoots.has(entry.path.split('/')[0]!));
-  if (canonicalJson(evaluatorFiles) !== canonicalJson(expectedEvaluatorFiles)) {
-    addIntegrity('manifest_provenance_evaluator_files_closure');
-  }
-
-  const codeByPath = new Map(codeFiles.map((entry) => [entry.path, entry.sha256]));
-  for (const entry of evaluatorFiles) {
-    const layer = entry.path.split('/')[0];
-    if (layer !== 'eval' && layer !== 'contracts' && layer !== 'trace') {
-      addIntegrity(`manifest_provenance_evaluator_scope_${entry.path}`);
-    }
-    if (codeByPath.get(entry.path) !== entry.sha256) {
-      addIntegrity(`manifest_provenance_evaluator_file_mismatch_${entry.path}`);
     }
   }
 }

@@ -15,10 +15,7 @@ export interface RunEvidence {
   readonly manifest: RunManifest;
   readonly events: readonly BusinessEvent[];
   readonly nativeEvents: readonly unknown[];
-  readonly attestation: EvidenceAttestation;
 }
-
-export type EvidenceAttestation = 'VERIFIED' | 'UNVERIFIED';
 
 export interface RunBundle extends RunEvidence {
   readonly metrics: BusinessMetrics;
@@ -38,28 +35,6 @@ export { canonicalJson };
 export function digest(value: unknown): string {
   const contents = typeof value === 'string' ? value : canonicalJson(value);
   return createHash('sha256').update(contents, 'utf8').digest('hex');
-}
-
-const EVIDENCE_DIGEST_SEPARATOR = '\u0000';
-
-/**
- * sha256 over the exact stored text of the two event streams. Kept as a separate
- * function so the writer and the reader cannot drift apart.
- */
-export function evidenceDigest(
-  businessEventsText: string,
-  nativeEventsText: string,
-): string {
-  return createHash('sha256')
-    .update(`${businessEventsText}${EVIDENCE_DIGEST_SEPARATOR}${nativeEventsText}`, 'utf8')
-    .digest('hex');
-}
-
-function withEvidenceDigest(manifest: unknown, sha256: string): unknown {
-  if (manifest === null || typeof manifest !== 'object' || Array.isArray(manifest)) {
-    return manifest;
-  }
-  return { ...(manifest as Record<string, unknown>), evidence_sha256: sha256 };
 }
 
 export function createRunId(mode: string): string {
@@ -128,7 +103,7 @@ function parseJsonFile(contents: string, filePath: string): unknown {
 
 export interface WriteRunBundleResult {
   readonly directory: string;
-  /** The manifest exactly as written, including the sealed evidence digest. */
+  /** The manifest exactly as written (redacted). */
   readonly manifest: RunManifest;
 }
 
@@ -154,15 +129,9 @@ export async function writeRunBundle(
 
   const businessEventsText = serializeJsonLines(Array.isArray(events) ? events : []);
   const nativeEventsText = serializeJsonLines(Array.isArray(nativeEvents) ? nativeEvents : []);
-  // Seal the redacted event streams, i.e. exactly the bytes that land on disk. A
-  // later hand-edit of either file can no longer change the verdict unnoticed.
-  const sealedManifest = withEvidenceDigest(
-    manifest,
-    evidenceDigest(businessEventsText, nativeEventsText),
-  );
 
   await Promise.all([
-    writeFile(path.join(directory, 'manifest.json'), serializeJson(sealedManifest), {
+    writeFile(path.join(directory, 'manifest.json'), serializeJson(manifest), {
       flag: 'wx',
     }),
     writeFile(path.join(directory, 'business-events.jsonl'), businessEventsText, {
@@ -176,10 +145,10 @@ export async function writeRunBundle(
     }),
   ]);
 
-  return { directory, manifest: sealedManifest as RunManifest };
+  return { directory, manifest: manifest as RunManifest };
 }
 
-export async function readRunEvidence(directory: string): Promise<RunEvidence> {
+async function readRunEvidence(directory: string): Promise<RunEvidence> {
   const manifestPath = path.join(directory, 'manifest.json');
   const businessEventsPath = path.join(directory, 'business-events.jsonl');
   const nativeEventsPath = path.join(directory, 'native-events.jsonl');
@@ -192,32 +161,16 @@ export async function readRunEvidence(directory: string): Promise<RunEvidence> {
     ]);
 
   const manifest = parseJsonFile(manifestText, manifestPath) as RunManifest;
-  // Parse before verifying: a malformed file should surface as a parse error (which
-  // names the offending line) rather than as a digest mismatch. The digest guard
-  // then catches well-formed tampering that parsing alone cannot see.
   const events = parseJsonLines(
     businessEventsText,
     businessEventsPath,
   ) as BusinessEvent[];
   const nativeEvents = parseJsonLines(nativeEventsText, nativeEventsPath);
 
-  const recordedDigest = manifest.evidence_sha256;
-  let attestation: EvidenceAttestation = 'UNVERIFIED';
-  if (typeof recordedDigest === 'string' && recordedDigest.length > 0) {
-    const actualDigest = evidenceDigest(businessEventsText, nativeEventsText);
-    if (actualDigest !== recordedDigest) {
-      throw new Error(
-        `evidence digest mismatch in ${directory}: manifest records ${recordedDigest} but the stored event files hash to ${actualDigest}`,
-      );
-    }
-    attestation = 'VERIFIED';
-  }
-
   return {
     manifest,
     events,
     nativeEvents,
-    attestation,
   };
 }
 

@@ -8,9 +8,9 @@ import { redactValue } from './redaction.js';
 export { redactValue, safeError } from './redaction.js';
 export { readInstalledVersions, readLockfileDigest } from './environment.js';
 
-export function createRunPaths(projectRoot: string, mode: 'offline' | 'live', now = new Date()): RunPaths {
+export function createRunPaths(projectRoot: string, now = new Date()): RunPaths {
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-  const runId = `${stamp}-${mode}-${randomUUID()}`;
+  const runId = `${stamp}-live-${randomUUID()}`;
   const evidenceRoot = path.resolve(projectRoot, 'evidence', 'stage0');
   return {
     runId,

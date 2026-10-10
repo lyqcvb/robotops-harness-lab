@@ -1,5 +1,4 @@
 import type { ActionName } from './business.js';
-import type { RunProvenance } from './provenance.js';
 
 export const SCENARIO_IDS = [
   'happy_path',
@@ -12,11 +11,16 @@ export const SCENARIO_IDS = [
 export type ScenarioId = (typeof SCENARIO_IDS)[number];
 export type RecoveryMode = 'full' | 'fail-fast';
 
-interface RunManifestBase {
+export interface RunManifest {
+  /**
+   * 3 = no evaluator provenance and no evidence digest. Earlier shapes are retired:
+   * 1 carried `evidence_sha256`, 2 carried `provenance`.
+   */
+  schema_version: 3;
   run_id: string;
   created_at: string;
   scenario_id: ScenarioId;
-  mode: 'offline' | 'live';
+  mode: 'live';
   model: string;
   config: RecoveryMode;
   approval_source: 'manual' | 'scripted' | 'none';
@@ -28,27 +32,7 @@ interface RunManifestBase {
   lockfile_sha256: string;
   installed_versions: Record<string, string>;
   harness_version: string;
-  /**
-   * sha256 over the exact stored text of `business-events.jsonl` and
-   * `native-events.jsonl`. The event streams are the actual proof of what a run did,
-   * so they are sealed at write time and re-verified at read time. Absent on runs
-   * recorded before evidence attestation existed; such runs are reported as
-   * UNVERIFIED rather than silently treated as trustworthy.
-   */
-  evidence_sha256?: string;
 }
-
-export interface RunManifestV1 extends RunManifestBase {
-  schema_version: 1;
-  provenance?: never;
-}
-
-export interface RunManifestV2 extends RunManifestBase {
-  schema_version: 2;
-  provenance: RunProvenance;
-}
-
-export type RunManifest = RunManifestV1 | RunManifestV2;
 
 export interface BusinessMetrics {
   status: 'PASS' | 'FAIL' | 'BLOCKED';
@@ -61,10 +45,31 @@ export interface BusinessMetrics {
   model_requests: number;
   action_executions: Record<ActionName, number>;
   failed_tools: number;
+  /** Approval requests the policy layer opened (`approval_pending`), decided or not. */
+  approval_requests: number;
   approval_sources: string[];
   active_ms: number | 'NOT_MEASURED';
   approval_wait_ms: number | 'NOT_MEASURED';
-  tokens: 'NOT_MEASURED';
-  cost: 'NOT_MEASURED';
+  tokens: TokenMetrics | 'NOT_MEASURED';
+  cost: CostMetrics | 'NOT_MEASURED';
   integrity_errors: string[];
+}
+
+/** Provider-reported usage summed over every model response; counts are disjoint. */
+export interface TokenMetrics {
+  input_cache_hit: number;
+  input_cache_miss: number;
+  output: number;
+  total: number;
+}
+
+/** Cost under the official peak/off-peak price, per response time in Beijing time. */
+export interface CostMetrics {
+  currency: 'CNY';
+  total: number;
+  peak: number;
+  off_peak: number;
+  peak_requests: number;
+  off_peak_requests: number;
+  pricing_version: string;
 }

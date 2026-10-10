@@ -4,7 +4,6 @@ import type { ToolResult } from '../contracts/business.js';
 import type { ToolName } from '../contracts/tool-protocol.js';
 import type { SafeError } from './runtime-types.js';
 
-export const OFFLINE_PROVIDER = 'business-scripted';
 export const PERSISTENCE_SEGMENT = 'business';
 export const MAX_TOKENS = 1024;
 export const STREAM_IDLE_TIMEOUT_MS = 30_000;
@@ -59,6 +58,35 @@ export function denied(code: string, reason: string): ToolResult {
   return { status: 'DENIED', error_code: code, reason, data: null };
 }
 
+/** Where a call was stopped before its tool body ran. */
+export type BlockedStage = 'preflight' | 'approval' | 'guard';
+
+const BLOCKED_STAGE_TEXT: Readonly<Record<BlockedStage, string>> = {
+  preflight: 'the host policy check',
+  approval: 'the approval step',
+  guard: 'the pre-dispatch verification',
+};
+
+/**
+ * Model-facing form of a call stopped before its tool body ran: the same four fields,
+ * with a reason that states the call never executed. Without it the model only sees
+ * the SDK's generic `Error: <text>` and cannot tell a blocked call from a failed one.
+ */
+export function blockedResult(stage: BlockedStage, result: ToolResult): ToolResult {
+  return {
+    ...result,
+    reason: `BLOCKED BEFORE EXECUTION by ${BLOCKED_STAGE_TEXT[stage]}: the tool did not run and no robot or task state changed. ${result.reason}`,
+  };
+}
+
+/** Records a blocked call in the trace and queues its model-facing result. */
+export type BlockCall = (
+  callId: string,
+  toolName: string,
+  stage: BlockedStage,
+  result: ToolResult,
+) => ToolResult;
+
 export function validateBaseUrl(raw: string | undefined): string | undefined {
   if (raw === undefined || raw.trim() === '') return undefined;
   const url = new URL(raw);
@@ -66,7 +94,7 @@ export function validateBaseUrl(raw: string | undefined): string | undefined {
     throw new Error('DEEPSEEK_BASE_URL must not contain userinfo, query, or fragment');
   }
   if (url.protocol === 'https:') return url.toString().replace(/\/$/, '');
-  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1';
+  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]';
   if (url.protocol === 'http:' && local) return url.toString().replace(/\/$/, '');
   throw new Error('DEEPSEEK_BASE_URL must use https, or http only for localhost test endpoints');
 }
