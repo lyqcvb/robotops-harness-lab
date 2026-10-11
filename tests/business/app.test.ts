@@ -12,6 +12,7 @@ import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
 import test from 'node:test';
 
+import { dispatch } from '../../src/app/business-cli.js';
 import { runBusinessInternal } from '../../src/app/business-run.js';
 import { DEFAULT_MODEL } from '../../src/contracts/policy.js';
 import { readRunBundle } from '../../src/trace/run-evidence.js';
@@ -188,5 +189,36 @@ test('manual approval rejects automatic input when the injected reader is non-TT
   } finally {
     input.destroy();
     output.end();
+  }
+});
+
+test('an interrupted eval batch schedules no further runs and exits non-zero as incomplete', async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), 'robotops-eval-interrupt-'));
+  const interrupt = new AbortController();
+  interrupt.abort();
+  const stdout: string[] = [];
+  try {
+    const code = await dispatch(['eval', '--repeats', '1'], {
+      cwd: projectRoot,
+      env: {},
+      signal: interrupt.signal,
+      stdout: (line) => {
+        stdout.push(line);
+      },
+      stderr: () => undefined,
+    });
+    assert.equal(code, 2);
+
+    const summary = JSON.parse(stdout[stdout.length - 1] ?? '{}') as Record<string, unknown>;
+    assert.equal(summary.actual, 0);
+    assert.equal(summary.missing, summary.planned);
+    assert.equal(summary.complete, false);
+    const batchId = String(summary.batch_id);
+    const persisted = JSON.parse(
+      await readFile(path.join(projectRoot, 'results', 'batches', batchId, 'summary.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    assert.equal(persisted.complete, false);
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
   }
 });

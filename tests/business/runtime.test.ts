@@ -5,7 +5,14 @@ import { TOOL_NAMES } from '../../src/contracts/business.js';
 import { SCENARIO_IDS, type RecoveryMode } from '../../src/contracts/run.js';
 import { nativeApprovalGranted } from '../../src/harness/business-runtime.js';
 import { getBusinessScenario } from '../../src/harness/business-scenarios.js';
+import { createApprovalHandler } from '../../src/harness/runtime-approval.js';
 import { TOOL_DESCRIPTIONS, validateBaseUrl } from '../../src/harness/runtime-support.js';
+import type { BusinessRuntimeInput, PendingApproval } from '../../src/harness/runtime-types.js';
+import { BusinessServices } from '../../src/services/business-services.js';
+import { RobotSimulator } from '../../src/simulator/robot-simulator.js';
+import { ApprovalLedger } from '../../src/tools/approval-ledger.js';
+import { ToolBoundary } from '../../src/tools/tool-boundary.js';
+import { BusinessTrace } from '../../src/trace/business-trace.js';
 
 // Model behaviour is verified against the real model (npm run eval / test:e2e); the
 // runtime and approval chain are regressed keylessly in runtime-chain.test.ts. These
@@ -215,4 +222,72 @@ test('DEEPSEEK_BASE_URL accepts https, and http only for loopback test endpoints
   assert.throws(() => validateBaseUrl('https://user:pass@api.example.com'), /userinfo/);
   assert.throws(() => validateBaseUrl('https://api.example.com/?key=x'), /query/);
   assert.throws(() => validateBaseUrl('https://api.example.com/#frag'), /fragment/);
+});
+
+test('an unmatched approval request withdraws the pending grant and restarts the active clock', async () => {
+  let now = 0;
+  const clock = (): number => now;
+  const runId = 'run-unmatched';
+  const sessionId = 'session-unmatched';
+  const trace = new BusinessTrace({ runId, scenarioId: 'navigation_restart_fail_then_reboot', sessionId, now: clock });
+  const simulator = new RobotSimulator({ runId, trace });
+  const services = new BusinessServices({ runId, simulator, trace });
+  const boundary = new ToolBoundary({ runId, trace, services, now: clock });
+  const ledger = new ApprovalLedger({ runId, trace, now: clock, allowScripted: true });
+
+  const args = { robot_id: 'R-03' };
+  const fingerprint = boundary.approvalFingerprint(args);
+  assert.notEqual(ledger.request({ run_id: runId, session_id: sessionId, call_id: 'call-force' }, args, fingerprint), null);
+  const pendingApprovals = new Map<string, PendingApproval>([
+    ['call-force', { runId, sessionId, callId: 'call-force', args, fingerprint, deadline: 120_000 }],
+  ]);
+  // Mirrors tools/pre-execute: the active clock is paused while the approval is asked.
+  boundary.pauseForApproval();
+
+  let armed = 0;
+  const blocked: string[] = [];
+  let decided = false;
+  const handler = createApprovalHandler({
+    input: {
+      runId,
+      trace,
+      boundary,
+      ledger,
+      approval: {
+        source: 'scripted',
+        decide: () => {
+          decided = true;
+          return Promise.resolve('approved');
+        },
+      },
+    } as unknown as BusinessRuntimeInput,
+    pendingApprovals,
+    armActiveTimer: () => {
+      armed += 1;
+    },
+    blockCall: (_callId, _toolName, _stage, result) => {
+      blocked.push(result.error_code ?? '');
+      return result;
+    },
+  });
+
+  now = 5_000;
+  const outcome = await handler({
+    callId: 'call-force',
+    toolName: 'force_reboot',
+    agent: { id: 'another-session' },
+  } as unknown as Parameters<typeof handler>[0]);
+
+  assert.equal(outcome, 'rejected');
+  assert.equal(decided, false, 'a mismatched request must never reach the approver');
+  assert.deepEqual(blocked, ['APPROVAL_UNMATCHED']);
+  assert.equal(pendingApprovals.size, 0);
+  assert.equal(armed, 1);
+  assert.equal(ledger.records()[0]?.status, 'cancelled');
+
+  now = 6_000;
+  const stats = boundary.stats();
+  assert.equal(stats.active_ms, 1_000, 'the active clock runs again after the unmatched request');
+  assert.equal(stats.approval_wait_ms, 5_000);
+  assert.equal(stats.stopped, false);
 });

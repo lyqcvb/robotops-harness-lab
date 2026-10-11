@@ -45,6 +45,10 @@ reject <current call_id printed by CLI>
 
 `run_id` 是审计元数据，不是输入 token；必须使用当前 run 打印的 `call_id`。错误输入不会延长审批窗口；过期后须启动新 run 并使用新 `call_id`，历史 `call_id` 不可复用。
 
+只有输入 `reject <call_id>` 才记为人工拒绝（`decision=rejected`，软停止）。在 `approval>` 提示下按 Ctrl+C、输入流结束或审批请求无效，都记为取消（`decision=cancelled`），按审批取消走硬停止，不写成拒绝。
+
+审批之外的阶段按 Ctrl+C，CLI 会取消当前 run（`runtime_status=CANCELLED`），仍然写出证据包并由宿主补建兜底工单；再按一次 Ctrl+C 立即退出进程，这次 run 不会留下证据。`npm run eval` 被中断后不再启动后续 run，`summary.json` 标记 `complete=false`，退出码为 `2`。
+
 ## 验收口径
 
 run 结束后，在 `results/<run_id>/` 下核对事件与 `metrics.json`：

@@ -112,16 +112,16 @@ export function createManualApproval(options: ManualApprovalOptions = {}): Appro
 
     const invalidReason = validateRequest(request);
     if (invalidReason !== null) {
-      writeLine(writer, `Manual approval request is invalid (${invalidReason}); rejected.`);
-      return 'rejected';
+      writeLine(writer, `Manual approval request is invalid (${invalidReason}); cancelled. The action has not been executed.`);
+      return 'cancelled';
     }
 
     let canonicalArgs: string;
     try {
       canonicalArgs = canonicalJson(request.args);
     } catch {
-      writeLine(writer, 'Manual approval arguments cannot be canonicalized; rejected.');
-      return 'rejected';
+      writeLine(writer, 'Manual approval arguments cannot be canonicalized; cancelled. The action has not been executed.');
+      return 'cancelled';
     }
 
     if (signal?.aborted === true) {
@@ -131,13 +131,13 @@ export function createManualApproval(options: ManualApprovalOptions = {}): Appro
 
     const now = options.now?.() ?? performance.now();
     if (!Number.isFinite(now)) {
-      writeLine(writer, 'Manual approval clock is invalid; rejected.');
-      return 'rejected';
+      writeLine(writer, 'Manual approval clock is invalid; cancelled. The action has not been executed.');
+      return 'cancelled';
     }
     const timeoutMs = remainingTimeoutMs(request, options.timeoutMs, now);
     if (timeoutMs === null) {
-      writeLine(writer, 'Manual approval deadline is invalid; rejected.');
-      return 'rejected';
+      writeLine(writer, 'Manual approval deadline is invalid; cancelled. The action has not been executed.');
+      return 'cancelled';
     }
 
     writeLine(writer, 'Manual approval request. The action has not been executed.');
@@ -183,10 +183,15 @@ export function createManualApproval(options: ManualApprovalOptions = {}): Appro
         finish('cancelled', 'Manual approval was cancelled; the action has not been executed.');
       };
 
+      // Only an explicit `reject <call_id>` is a human rejection. Ctrl+C and a closed input
+      // carry no decision, so they cancel the request (a hard stop) instead of rejecting it.
       signal?.addEventListener('abort', onAbort, { once: true });
+      rl.on('SIGINT', () => {
+        finish('cancelled', 'Manual approval was interrupted (Ctrl+C); cancelled. The action has not been executed.');
+      });
       rl.on('close', () => {
         if (!settled) {
-          finish('rejected', 'Manual approval input ended before a decision; rejected.');
+          finish('cancelled', 'Manual approval input ended before a decision; cancelled. The action has not been executed.');
         }
       });
 
@@ -205,7 +210,7 @@ export function createManualApproval(options: ManualApprovalOptions = {}): Appro
           try {
             line = await rl.question('approval> ');
           } catch {
-            finish('rejected', 'Manual approval input ended before a decision; rejected.');
+            finish('cancelled', 'Manual approval input ended before a decision; cancelled. The action has not been executed.');
             return;
           }
           if (settled) return;

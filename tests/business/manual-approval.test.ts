@@ -139,6 +139,56 @@ test(
 );
 
 for (const scenario of [
+  { name: 'Ctrl+C', send: (input: PassThrough): void => { input.write('\x03'); }, message: /interrupted \(Ctrl\+C\); cancelled/ },
+  { name: 'closed input', send: (input: PassThrough): void => { input.end(); }, message: /input ended before a decision; cancelled/ },
+]) {
+  test(`${scenario.name} cancels instead of rejecting`, { timeout: 5_000 }, async () => {
+    const harness = createTestHarness();
+    const controller = new AbortController();
+
+    try {
+      const decide = createManualApproval({
+        reader: harness.input,
+        writer: harness.writer,
+        isTTY: true,
+        now: () => 0,
+        timeoutMs: 1_000,
+      });
+      const decisionPromise = decide(REQUEST, controller.signal);
+
+      await harness.waitForOutput((text) => text.includes('approval> '));
+      scenario.send(harness.input);
+
+      assert.equal(await decisionPromise, 'cancelled');
+      assert.match(harness.output(), scenario.message);
+    } finally {
+      controller.abort();
+      harness.close();
+    }
+  });
+}
+
+test('an invalid request is cancelled without asking for a decision', { timeout: 5_000 }, async () => {
+  const harness = createTestHarness();
+
+  try {
+    const decide = createManualApproval({
+      reader: harness.input,
+      writer: harness.writer,
+      isTTY: true,
+      now: () => 0,
+      timeoutMs: 1_000,
+    });
+
+    assert.equal(await decide({ ...REQUEST, call_id: '' }), 'cancelled');
+    assert.match(harness.output(), /request is invalid \(call_id is missing\); cancelled/);
+    assert.doesNotMatch(harness.output(), /approval> /);
+  } finally {
+    harness.close();
+  }
+});
+
+for (const scenario of [
   { name: 'an expired deadline', now: REQUEST.deadline_ms + 1, timeoutMs: 1_000 },
   { name: 'a zero timeout', now: 0, timeoutMs: 0 },
   { name: 'a positive short timeout without input', now: 0, timeoutMs: 10 },

@@ -94,6 +94,14 @@ export function createApprovalHandler({
           'The approval request did not match a pending force_reboot call for this run and session, so it was rejected.',
         ));
       }
+      if (pending !== undefined) {
+        // pre-execute already paused the active clock for this call; withdraw the grant and
+        // restart the clock, or the active deadline would stay disarmed for the rest of the run.
+        input.ledger.cancel(callId, 'approval request did not match the pending call');
+        pendingApprovals.delete(callId);
+        input.boundary.resumeAfterApproval();
+        armActiveTimer();
+      }
       return 'rejected';
     }
 

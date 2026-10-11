@@ -29,6 +29,10 @@ interface RunOptions {
   readonly config?: RecoveryMode;
   readonly approval?: ApprovalMode;
   readonly budgets?: { readonly modelRequests?: number; readonly approvalMs?: number };
+  /** Run-level cancellation, as the CLI wires it to SIGINT. */
+  readonly interrupt?: AbortController;
+  /** Aborts `interrupt` once the approval request is pending. */
+  readonly interruptDuringApproval?: boolean;
 }
 
 interface Harness {
@@ -78,11 +82,12 @@ function forceRebootResult(harness: Harness): Record<string, unknown> {
   return result;
 }
 
-function makeApproval(mode: ApprovalMode): BusinessRuntimeApproval | undefined {
+function makeApproval(mode: ApprovalMode, onAsked?: () => void): BusinessRuntimeApproval | undefined {
   if (mode === 'none') return undefined;
   return {
     source: 'scripted',
     decide: async (_request, signal) => {
+      onAsked?.();
       if (mode === 'error') throw new Error('approver service unreachable');
       if (mode !== 'timeout') return mode;
       return await new Promise<'cancelled'>((resolve) => {
@@ -153,7 +158,10 @@ async function runScenario(options: RunOptions): Promise<Harness> {
     authorizeForce: (ctx, args, fingerprint) =>
       ledger.consume(ctx, args, fingerprint, nativeApprovalGranted(nativeEvents, ctx)),
   });
-  const approval = makeApproval(options.approval ?? scenario.scriptedDecision);
+  const approval = makeApproval(
+    options.approval ?? scenario.scriptedDecision,
+    options.interruptDuringApproval === true ? () => options.interrupt?.abort() : undefined,
+  );
 
   const result = await executeBusinessRuntime({
     projectRoot: process.cwd(),
@@ -166,6 +174,7 @@ async function runScenario(options: RunOptions): Promise<Harness> {
     ledger,
     nativeEvents,
     ...(approval === undefined ? {} : { approval }),
+    ...(options.interrupt === undefined ? {} : { signal: options.interrupt.signal }),
     testModel: { provider: 'scripted-test', adapter: new ScriptedAdapter(scenarioTurns(options.scenarioId, config)) },
   });
   return { runId, trace, simulator, services, ledger, boundary, nativeEvents, result };
@@ -249,6 +258,28 @@ test('an approval channel failure names the failure', async () => {
   assert.equal(harness.result.error?.code, 'APPROVAL_CANCELLED');
   assert.equal(serviceCallCount(harness, 'force_reboot'), 0);
   assertBlockedForModel(harness, 'APPROVAL_ERROR', /The approval channel failed before returning a decision \(approver service unreachable\)/);
+});
+
+test('an interrupt during the approval wait cancels the run without any robot action', async () => {
+  const harness = await runScenario({
+    scenarioId: 'navigation_restart_fail_then_reboot',
+    approval: 'timeout',
+    interrupt: new AbortController(),
+    interruptDuringApproval: true,
+  });
+  assert.equal(harness.result.status, 'CANCELLED');
+  assert.equal(harness.result.error?.code, 'CANCELLED');
+  assert.equal(harness.boundary.stats().stop_reason, 'CANCELLED');
+  assert.equal(traceCount(harness, 'run_cancelled'), 1);
+  assert.equal(harness.simulator.snapshot().counters.force_reboot, 0);
+  assert.equal(serviceCallCount(harness, 'force_reboot'), 0);
+  const decisions = harness.trace
+    .events()
+    .filter((event) => event.type === 'approval_decided')
+    .map((event) => event.data.decision);
+  assert.deepEqual(decisions, ['cancelled'], 'an interrupt is never recorded as approved or rejected');
+  assert.equal(harness.ledger.records()[0]?.status, 'cancelled');
+  assert.equal(forceRebootResult(harness).error_code, 'APPROVAL_CANCELLED');
 });
 
 test('fail-fast stops after the first failed restart without requesting approval', async () => {

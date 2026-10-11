@@ -240,6 +240,8 @@ export async function runEval(io: BusinessCliIO, argv: readonly string[]): Promi
   }
 
   for (const spec of plan) {
+    // An interrupt cancels the run in flight; the runs never started stay counted as missing.
+    if (io.signal?.aborted === true) break;
     try {
       const result = await runBusinessInternal(
         {
@@ -249,6 +251,7 @@ export async function runEval(io: BusinessCliIO, argv: readonly string[]): Promi
           approvalMode: spec.approvalMode,
           batchId,
           repeat: spec.repeat,
+          ...(io.signal === undefined ? {} : { signal: io.signal }),
         },
         io.env,
       );
@@ -296,6 +299,7 @@ export async function runEval(io: BusinessCliIO, argv: readonly string[]): Promi
   );
   return aggregateExitCode(
     metrics,
-    records.some((record) => record.error !== null || record.metrics === null),
+    records.length !== plan.length ||
+      records.some((record) => record.error !== null || record.metrics === null),
   );
 }

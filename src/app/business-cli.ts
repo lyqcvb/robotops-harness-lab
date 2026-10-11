@@ -82,6 +82,7 @@ async function runE2e(io: BusinessCliIO, argv: readonly string[]): Promise<numbe
         config: parsed.config,
         approvalMode: parsed.approvalMode,
         repeat: 1,
+        ...(io.signal === undefined ? {} : { signal: io.signal }),
       },
       io.env,
     );
@@ -109,6 +110,7 @@ async function runDemo(io: BusinessCliIO, argv: readonly string[]): Promise<numb
         config: 'full',
         approvalMode: 'manual',
         repeat: 1,
+        ...(io.signal === undefined ? {} : { signal: io.signal }),
       },
       io.env,
     );
@@ -144,11 +146,22 @@ export async function main(
   argv: readonly string[] = process.argv.slice(2),
   io?: Partial<BusinessCliIO>,
 ): Promise<number> {
-  const resolved = resolveIo(io);
+  // The first Ctrl+C cancels the current run through the runtime's own CANCELLED path, so its
+  // evidence bundle and host cleanup ticket are still written. The listener is `once`: a second
+  // Ctrl+C falls back to Node's default and exits immediately.
+  const interrupt = new AbortController();
+  const resolved = resolveIo({ ...io, signal: io?.signal ?? interrupt.signal });
+  const onInterrupt = (): void => {
+    resolved.stderr('interrupt received: cancelling the current run; press Ctrl+C again to exit immediately');
+    interrupt.abort(new Error('business run interrupted by SIGINT'));
+  };
+  if (io?.signal === undefined) process.once('SIGINT', onInterrupt);
   try {
     return await dispatch(argv, resolved);
   } catch (error) {
     emitError(resolved, error);
     return 2;
+  } finally {
+    process.removeListener('SIGINT', onInterrupt);
   }
 }

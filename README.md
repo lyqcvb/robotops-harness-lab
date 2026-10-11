@@ -221,7 +221,7 @@ robotops-harness-lab/
 │  └─ eval/                  # 独立验收
 ├─ scripts/                  # business / dashboard / probe CLI 入口
 ├─ tests/                    # architecture、business、probe、dashboard 测试；support/ 为仅测试用的脚本化适配器
-├─ docs/                     # 架构约束、工具参考、执行链路、Demo、Dashboard
+├─ docs/                     # 架构约束、工具参考、模拟器、执行链路、Demo、Dashboard
 ├─ results/                  # 本地生成的 run 与批次 summary（不入库）
 └─ evidence/                 # 本地生成的 probe 证据（不入库）
 ```
@@ -306,6 +306,7 @@ tokens 与 cost 由 evaluator 从 `native-events.jsonl` 中每条模型响应的
 - [文档总入口](docs/README.md)：当前状态与文档索引。
 - [架构约束](docs/architecture.md)：模块依赖、业务契约、预算、审批、停止矩阵、Trace/Eval 和阶段状态。
 - [工具参考](docs/tools.md)：七个工具的模型可见描述、入参、出参与错误码。
+- [模拟器说明书](docs/simulator.md)：机器人模拟器的接口、故障注入、状态机与场景配置。
 - [执行链路汇总](docs/execution-chains.md)：模型与运行时配置、提示词、单次工具调用链路与五场景预期调用序列。
 - [Demo 与真实人工审批](docs/demo.md)：manual Demo 操作流程与验收口径。
 - [Dashboard 使用说明](docs/dashboard.md)：只读历史 Run 查看器。

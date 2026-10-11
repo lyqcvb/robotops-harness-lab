@@ -8,6 +8,8 @@ export interface BusinessCliIO {
   stderr(line: string): void;
   env: NodeJS.ProcessEnv;
   cwd: string;
+  /** Aborted on the first SIGINT; cancels the current run and stops scheduling new ones. */
+  signal?: AbortSignal;
 }
 
 interface RunOutput {
@@ -40,6 +42,7 @@ export function resolveIo(io: Partial<BusinessCliIO> = {}): BusinessCliIO {
     }),
     env: io.env ?? process.env,
     cwd: io.cwd ?? process.cwd(),
+    ...(io.signal === undefined ? {} : { signal: io.signal }),
   };
 }
 
